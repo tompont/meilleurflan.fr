@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeilleurFlan.fr</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fffdf8;
+  --surface: #ffffff;
+  --warm: #fdf6e8;
+  --caramel: #c07830;
+  --caramel-dark: #9a5e1a;
+  --brown: #3d2008;
+  --border: #e8dbc8;
+  --muted: #9a8878;
+  --yellow: #f5d84a;
+  --orange: #e05520;
+  --text: #2a1505;
+}
+
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+
+/* ── HEADER ── */
+header { background:var(--yellow); padding:1.5rem 1.5rem 1.25rem; border-bottom:2px solid rgba(61,32,8,0.15); }
+.site-label { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--brown); opacity:0.5; margin-bottom:0.5rem; display:block; }
+.hero-title { font-family:'Fraunces',serif; font-size:clamp(2.4rem,8vw,5rem); font-weight:900; line-height:0.95; color:var(--brown); letter-spacing:-0.02em; }
+.hero-title em { font-style:italic; color:var(--caramel); }
+.header-bottom { display:flex; align-items:center; justify-content:space-between; margin-top:0.85rem; gap:1rem; flex-wrap:wrap; }
+.header-desc { font-size:0.9rem; color:var(--brown); opacity:0.6; line-height:1.4; }
+.header-stats { display:flex; gap:2rem; flex-shrink:0; }
+.stat { text-align:center; }
+.stat-num { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:900; color:var(--brown); display:block; line-height:1; }
+.stat-label { font-family:'DM Mono',monospace; font-size:0.5rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brown); opacity:0.5; display:block; margin-top:0.15rem; }
+
+/* ── FLAN DE LA SEMAINE ── */
+.semaine-section { background:var(--warm); border-bottom:1px solid var(--border); padding:0.9rem 1.5rem; cursor:pointer; transition:background 0.1s; }
+.semaine-section:hover { background:#fdf0d5; }
+.semaine-inner { display:flex; align-items:center; gap:1rem; }
+.semaine-tag { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--caramel); font-weight:500; flex-shrink:0; }
+.semaine-name { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.semaine-sub { font-size:0.78rem; color:var(--muted); flex-shrink:0; }
+.semaine-likes { font-family:'Fraunces',serif; font-size:1.2rem; font-weight:900; color:var(--caramel); flex-shrink:0; }
+
+/* ── NAV ── */
+.nav-sticky { position:sticky; top:0; z-index:100; background:var(--surface); border-bottom:2px solid var(--border); box-shadow:0 2px 10px rgba(60,32,8,0.06); }
+
+/* Ligne 1 : search + actions */
+.nav-row1 { display:flex; align-items:center; height:50px; border-bottom:1px solid var(--border); }
+
+.search-wrap { display:flex; align-items:center; padding:0 1rem; gap:0.6rem; flex:1; height:100%; }
+.search-wrap input { background:none; border:none; font-family:'DM Sans',sans-serif; font-size:0.95rem; color:var(--text); outline:none; width:100%; }
+.search-wrap input::placeholder { color:var(--muted); }
+
+.nav-btns { display:flex; align-items:stretch; border-left:1px solid var(--border); }
+.btn-nav { font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:500; background:none; border:none; border-left:1px solid var(--border); padding:0 1rem; cursor:pointer; color:var(--muted); white-space:nowrap; transition:all 0.12s; display:flex; align-items:center; gap:0.3rem; }
+.btn-nav:first-child { border-left:none; }
+.btn-nav:hover { color:var(--text); background:var(--warm); }
+.btn-nav.active { background:var(--caramel); color:#fff; font-weight:600; }
+
+/* Ligne 2 : villes + filtre btn */
+.nav-row2 { display:flex; align-items:center; height:44px; }
+
+.cities-scroll { display:flex; align-items:center; flex:1; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:0 0.75rem; gap:0.15rem; }
+.cities-scroll::-webkit-scrollbar { display:none; }
+
+.btn-city { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; background:none; border:none; border-radius:6px; padding:0.3rem 0.8rem; cursor:pointer; color:var(--muted); white-space:nowrap; flex-shrink:0; transition:all 0.12s; }
+.btn-city:hover { color:var(--text); background:var(--warm); }
+.btn-city.active { color:var(--caramel); font-weight:700; background:#fdf0dc; }
+.city-dot { width:4px; height:4px; border-radius:50%; background:var(--border); flex-shrink:0; margin:0 0.1rem; }
+
+.city-select { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; background:none; border:none; color:var(--muted); padding:0.3rem 0.6rem; cursor:pointer; outline:none; appearance:none; flex-shrink:0; }
+.city-select.active { color:var(--caramel); font-weight:700; }
+
+.btn-filter-toggle { font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:500; background:none; border:none; border-left:1px solid var(--border); padding:0 1rem; height:100%; cursor:pointer; color:var(--muted); white-space:nowrap; flex-shrink:0; transition:all 0.12s; display:flex; align-items:center; gap:0.4rem; }
+.btn-filter-toggle:hover { color:var(--text); background:var(--warm); }
+.btn-filter-toggle.has-active { color:var(--caramel); font-weight:600; }
+.filter-count { background:var(--caramel); color:#fff; border-radius:999px; font-size:0.6rem; padding:1px 6px; font-weight:700; }
+
+/* Panneau filtres */
+.filter-panel { background:var(--surface); border-bottom:2px solid var(--border); padding:0.75rem 1.5rem; display:none; gap:1.5rem; flex-wrap:wrap; align-items:center; }
+.filter-panel.open { display:flex; }
+.filter-group { display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
+.filter-group-label { font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:600; color:var(--muted); white-space:nowrap; }
+.btn-extra { font-family:'DM Sans',sans-serif; font-size:0.8rem; font-weight:500; background:var(--bg); border:1.5px solid var(--border); color:var(--muted); padding:0.25rem 0.85rem; border-radius:999px; cursor:pointer; transition:all 0.12s; white-space:nowrap; }
+.btn-extra:hover { border-color:var(--caramel); color:var(--caramel); }
+.btn-extra.active { background:var(--caramel); border-color:var(--caramel); color:#fff; font-weight:600; }
+.btn-filter-clear { font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:500; background:none; border:none; color:var(--orange); cursor:pointer; padding:0 0.25rem; text-decoration:underline; }
+
+/* ── MAIN ── */
+main { padding-bottom:6rem; }
+
+.list-header { padding:0.65rem 1.5rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--bg); }
+.list-header-title { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:var(--text); }
+.list-header-count { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); }
+
+/* ── RANKING ── */
+.ranking { display:flex; flex-direction:column; }
+
+.rank-item { display:grid; grid-template-columns:52px 1fr 60px; gap:0; align-items:stretch; border-bottom:1px solid var(--border); background:var(--surface); transition:background 0.1s; animation:fadein 0.15s ease both; cursor:pointer; }
+@keyframes fadein { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
+.rank-item:hover { background:var(--warm); }
+.rank-item.top1 { background:#fffdf0; border-left:4px solid var(--yellow); }
+.rank-item.top1:hover { background:#fff9e0; }
+
+.rank-num-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1rem 0; border-right:1px solid var(--border); flex-shrink:0; }
+.rank-n { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:900; color:#d8c8b4; line-height:1; }
+.rank-item.top1 .rank-n { font-size:1.7rem; color:var(--caramel); }
+.rank-item.top2 .rank-n { color:#b8a888; }
+.rank-item.top3 .rank-n { color:#c8a870; }
+.rank-medal { font-size:1rem; line-height:1; margin-top:0.15rem; }
+
+.rank-body { padding:0.85rem 1rem; min-width:0; }
+.rank-name { font-family:'Fraunces',serif; font-size:1.05rem; font-weight:700; line-height:1.25; color:var(--text); margin-bottom:0.1rem; }
+.rank-item.top1 .rank-name { font-size:1.15rem; }
+.rank-where { font-size:0.82rem; color:var(--muted); margin-bottom:0.4rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rank-where strong { color:var(--text); font-weight:500; }
+.rank-pills { display:flex; flex-wrap:wrap; gap:0.25rem; }
+.pill { font-family:'DM Sans',sans-serif; font-size:0.68rem; font-weight:500; padding:2px 7px; border-radius:4px; background:var(--warm); color:var(--muted); border:1px solid var(--border); }
+.pill-prix { background:var(--caramel); color:#fff; border-color:var(--caramel); }
+.rank-comment { font-size:0.78rem; font-style:italic; color:var(--text); opacity:0.5; margin-top:0.35rem; padding-left:0.5rem; border-left:2px solid var(--caramel); line-height:1.4; }
+.rank-badges { display:flex; gap:0.25rem; flex-wrap:wrap; margin-top:0.3rem; }
+.badge { font-family:'DM Sans',sans-serif; font-size:0.65rem; font-weight:500; padding:2px 7px; border-radius:4px; }
+.badge-legend { background:#fff3c4; color:#7a5c00; }
+.badge-seisme { background:#fde8e0; color:#b03010; }
+.badge-flamby { background:#fde8cc; color:#8a4200; }
+.badge-new { background:#e0f5e8; color:#1a7a3a; }
+.badge-semaine { background:#f0e0ff; color:#6a20a8; }
+
+.rank-like-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.75rem 0; border-left:1px solid var(--border); flex-shrink:0; gap:0.3rem; }
+.rank-likes-num { font-family:'Fraunces',serif; font-size:1.3rem; font-weight:900; color:var(--text); line-height:1; }
+.rank-item.top1 .rank-likes-num { color:var(--caramel); font-size:1.5rem; }
+.rank-likes-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
+.btn-like { font-family:'DM Sans',sans-serif; font-size:0.72rem; font-weight:500; background:none; border:1px solid var(--border); color:var(--muted); padding:0.25rem 0.5rem; cursor:pointer; transition:all 0.12s; border-radius:5px; }
+.btn-like:hover { border-color:var(--caramel); color:var(--caramel); }
+.btn-like.liked { background:var(--caramel); border-color:var(--caramel); color:#fff; }
+
+@keyframes wobble { 0%{transform:rotate(0) scale(1)} 20%{transform:rotate(-9deg) scale(1.12)} 40%{transform:rotate(7deg) scale(1.08)} 60%{transform:rotate(-4deg) scale(1.05)} 80%{transform:rotate(2deg) scale(1.02)} 100%{transform:rotate(0) scale(1)} }
+.wobble { animation:wobble 0.45s ease; }
+@keyframes celebrate { 0%{transform:scale(1)} 30%{transform:scale(1.02)} 60%{transform:scale(0.99)} 100%{transform:scale(1)} }
+.celebrate { animation:celebrate 0.4s ease; }
+
+.show-more-wrap { padding:1rem 1.5rem; border-bottom:1px solid var(--border); background:var(--surface); text-align:center; }
+.btn-show-more { font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500; background:none; border:1.5px solid var(--border); color:var(--muted); padding:0.6rem 2rem; border-radius:8px; cursor:pointer; transition:all 0.12s; }
+.btn-show-more:hover { border-color:var(--caramel); color:var(--caramel); }
+
+.empty { padding:4rem 2rem; font-size:1rem; color:var(--muted); text-align:center; font-style:italic; background:var(--surface); }
+
+/* ── MAP ── */
+#map-view { display:none; position:relative; }
+#map-view.active { display:block; }
+#list-view.hidden { display:none; }
+#map { height:calc(100vh - 180px); min-height:350px; }
+
+/* Fix z-index pour que les popups Leaflet passent au-dessus */
+.leaflet-pane { z-index:400; }
+.leaflet-overlay-pane { z-index:420; }
+.leaflet-marker-pane { z-index:430; }
+.leaflet-tooltip-pane { z-index:440; }
+.leaflet-popup-pane { z-index:450; }
+.leaflet-control { z-index:460; }
+
+.map-back-btn { position:absolute; top:1rem; left:50%; transform:translateX(-50%); z-index:500; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; background:var(--surface); border:1.5px solid var(--border); color:var(--text); padding:0.5rem 1.25rem; border-radius:999px; cursor:pointer; box-shadow:0 2px 12px rgba(60,32,8,0.12); transition:all 0.12s; white-space:nowrap; }
+.map-back-btn:hover { background:var(--warm); border-color:var(--caramel); color:var(--caramel); }
+
+.leaflet-popup-content-wrapper { border-radius:8px; border:1px solid var(--border); box-shadow:0 4px 16px rgba(60,32,8,0.1); font-family:'DM Sans',sans-serif; }
+.leaflet-popup-tip-container { display:none; }
+.map-popup-name { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; margin-bottom:0.2rem; line-height:1.2; color:var(--text); }
+.map-popup-bakery { font-size:0.72rem; color:var(--muted); margin-bottom:0.5rem; }
+.map-popup-likes { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; color:var(--caramel); margin-top:0.4rem; }
+.map-popup-likes span { font-size:0.7rem; font-weight:400; color:var(--muted); margin-left:0.2em; }
+.map-popup-pill { font-size:0.7rem; font-weight:500; padding:2px 7px; border-radius:4px; background:var(--warm); color:var(--muted); display:inline-block; margin-right:0.25rem; margin-bottom:0.25rem; border:1px solid var(--border); }
+.map-popup-pill.prix { background:var(--caramel); color:#fff; border-color:var(--caramel); }
+.map-popup-link { font-size:0.78rem; font-weight:600; color:var(--caramel); cursor:pointer; display:inline-block; margin-top:0.5rem; }
+.map-flanlist { background:var(--surface); border-top:2px solid var(--border); }
+.map-flanlist-header { padding:0.7rem 1.5rem; border-bottom:1px solid var(--border); font-family:'Fraunces',serif; font-size:0.9rem; font-weight:700; color:var(--text); }
+.map-flan-row { display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1.5rem; border-bottom:1px solid var(--border); gap:1rem; cursor:pointer; transition:background 0.1s; }
+.map-flan-row:hover { background:var(--warm); }
+.map-flan-name { font-family:'Fraunces',serif; font-size:0.95rem; font-weight:700; color:var(--text); }
+.map-flan-sub { font-size:0.78rem; color:var(--muted); }
+.map-flan-likes { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:900; color:var(--caramel); flex-shrink:0; }
+
+/* CONFETTI */
+.confetti-piece { position:fixed; width:7px; height:7px; pointer-events:none; z-index:9999; animation:fall 0.9s ease-in forwards; }
+@keyframes fall { 0%{opacity:1;transform:translateY(0) rotate(0)} 100%{opacity:0;transform:translateY(180px) rotate(540deg)} }
+
+/* ── FAB AJOUTER ── */
+.fab { position:fixed; bottom:1.5rem; right:1.5rem; z-index:90; background:var(--brown); color:var(--yellow); border:none; border-radius:999px; padding:0.75rem 1.4rem; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; box-shadow:0 4px 18px rgba(61,32,8,0.35); display:flex; align-items:center; gap:0.5rem; transition:all 0.15s; white-space:nowrap; letter-spacing:0.01em; }
+.fab:hover { background:#251608; transform:translateY(-2px); box-shadow:0 6px 24px rgba(61,32,8,0.45); }
+.fab.hidden { display:none; }
+
+/* ── FORM DRAWER ── */
+.form-overlay { display:none; position:fixed; inset:0; background:rgba(42,21,5,0.45); z-index:150; align-items:flex-end; justify-content:center; }
+.form-overlay.open { display:flex; }
+.form-drawer { background:var(--surface); border-radius:20px 20px 0 0; padding:1.75rem 1.5rem 2rem; width:100%; max-width:680px; max-height:90vh; overflow-y:auto; animation:slideup 0.3s cubic-bezier(0.34,1.2,0.64,1); }
+@keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.form-drawer-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
+.form-drawer-title { font-family:'Fraunces',serif; font-size:1.3rem; font-weight:700; color:var(--text); }
+.btn-drawer-close { font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:500; background:none; border:1px solid var(--border); color:var(--muted); padding:0.35rem 0.9rem; border-radius:6px; cursor:pointer; }
+.btn-drawer-close:hover { color:var(--text); border-color:var(--text); }
+
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem 1.5rem; }
+.form-group { display:flex; flex-direction:column; gap:0.35rem; }
+.form-group.full { grid-column:1/-1; }
+.form-group label { font-size:0.82rem; font-weight:600; color:var(--text); }
+.form-group input[type="text"], .form-group select { background:var(--bg); border:1.5px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.95rem; color:var(--text); padding:0.6rem 0.8rem; outline:none; width:100%; transition:border-color 0.12s; appearance:none; }
+.form-group input[type="text"]:focus, .form-group select:focus { border-color:var(--caramel); background:#fff; }
+.form-group input.error, .form-group select.error { border-color:var(--orange); }
+.field-error { font-size:0.72rem; color:var(--orange); display:none; }
+.field-error.show { display:block; }
+.dup-error { grid-column:1/-1; background:#fde8e0; border:1px solid #f0b8a0; color:#b03010; font-size:0.82rem; padding:0.6rem 0.85rem; border-radius:6px; display:none; }
+.dup-error.show { display:block; }
+.radio-row { display:flex; flex-wrap:wrap; gap:0.4rem; }
+.radio-opt { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; border:1.5px solid var(--border); border-radius:8px; padding:0.45rem 0.95rem; cursor:pointer; display:flex; align-items:center; gap:0.4rem; transition:all 0.1s; background:var(--bg); color:var(--text); }
+.radio-opt:has(input:checked) { background:var(--caramel); color:#fff; border-color:var(--caramel); }
+.radio-opt input { width:0; height:0; opacity:0; position:absolute; }
+.btn-submit { margin-top:1.25rem; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:600; background:var(--caramel); color:#fff; border:none; padding:0.8rem 2rem; border-radius:8px; cursor:pointer; transition:background 0.12s; width:100%; }
+.btn-submit:hover { background:var(--caramel-dark); }
+
+/* ── POPUP DÉTAIL ── */
+.overlay { display:none; position:fixed; inset:0; background:rgba(42,21,5,0.4); z-index:200; align-items:center; justify-content:center; padding:1rem; }
+.overlay.open { display:flex; }
+.popup { background:var(--surface); border-radius:14px; border:1px solid var(--border); box-shadow:0 8px 32px rgba(60,32,8,0.12); padding:1.75rem; max-width:400px; width:100%; animation:popin 0.22s cubic-bezier(0.34,1.4,0.64,1); max-height:90vh; overflow-y:auto; }
+@keyframes popin { from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:scale(1)} }
+.popup-label { font-family:'DM Mono',monospace; font-size:0.58rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); margin-bottom:0.5rem; }
+.popup-name { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:700; color:var(--text); line-height:1.2; margin-bottom:0.2rem; }
+.popup-bakery { font-size:0.85rem; color:var(--muted); margin-bottom:0.2rem; }
+.popup-city { font-size:0.82rem; color:var(--caramel); font-weight:500; margin-bottom:1rem; }
+.popup-comment { font-size:0.85rem; font-style:italic; color:var(--text); opacity:0.6; border-left:2px solid var(--caramel); padding-left:0.7rem; margin-bottom:1rem; line-height:1.5; display:none; }
+.popup-comment.show { display:block; }
+.popup-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.4rem; margin-bottom:1.25rem; }
+.popup-item { background:var(--warm); padding:0.5rem 0.7rem; border-radius:6px; border:1px solid var(--border); }
+.popup-item .k { font-family:'DM Mono',monospace; font-size:0.54rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.1rem; }
+.popup-item .v { font-size:0.88rem; font-weight:500; color:var(--text); }
+.popup-actions { display:flex; gap:0.5rem; }
+.popup-close { font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:600; background:var(--text); color:#fff; border:none; padding:0.65rem 1rem; border-radius:8px; cursor:pointer; flex:1; transition:background 0.12s; }
+.popup-close:hover { background:var(--caramel); }
+.popup-like { font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:500; background:none; color:var(--caramel); border:1.5px solid var(--caramel); padding:0.65rem 1rem; border-radius:8px; cursor:pointer; transition:all 0.12s; }
+.popup-like:hover, .popup-like.liked { background:var(--caramel); color:#fff; }
+.popup-share { font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:500; background:none; color:var(--text); border:1.5px solid var(--border); padding:0.65rem 0.85rem; border-radius:8px; cursor:pointer; transition:all 0.12s; }
+.popup-share:hover { background:var(--warm); }
+
+/* REPORT */
+.overlay { display:none; position:fixed; inset:0; background:rgba(42,21,5,0.4); z-index:200; align-items:center; justify-content:center; padding:1rem; }
+.overlay.open { display:flex; }
+.report-popup { max-width:320px; }
+.report-popup h3 { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; margin-bottom:0.6rem; }
+.report-popup p { font-size:0.85rem; color:var(--muted); margin-bottom:1rem; line-height:1.4; }
+.report-btns { display:flex; gap:0.5rem; }
+.btn-report-confirm { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:600; background:var(--orange); color:#fff; border:none; padding:0.6rem 1.2rem; border-radius:8px; cursor:pointer; flex:1; }
+.btn-report-cancel { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; background:none; color:var(--muted); border:1.5px solid var(--border); padding:0.6rem 1.2rem; border-radius:8px; cursor:pointer; }
+
+/* TOAST */
+.toast { position:fixed; bottom:5rem; left:50%; transform:translateX(-50%) translateY(60px); background:var(--text); color:#fff; padding:0.65rem 1.25rem; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; z-index:999; transition:transform 0.22s ease; white-space:nowrap; border-radius:8px; box-shadow:0 4px 16px rgba(60,32,8,0.15); }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+@media (max-width:620px) {
+  header { padding:1.25rem 1rem 1rem; }
+  .hero-title { font-size:clamp(2rem,10vw,3rem); }
+  .header-stats { gap:1.25rem; }
+  .stat-num { font-size:1.2rem; }
+  .nav-row1 { height:46px; }
+  .nav-row2 { height:40px; }
+  .rank-item { grid-template-columns:44px 1fr 52px; }
+  .rank-n { font-size:1.1rem; }
+  .rank-item.top1 .rank-n { font-size:1.4rem; }
+  .rank-name { font-size:0.95rem; }
+  .rank-likes-num { font-size:1.1rem; }
+  .rank-item.top1 .rank-likes-num { font-size:1.3rem; }
+  .form-grid { grid-template-columns:1fr; }
+  .form-drawer { padding:1.25rem 1rem 1.5rem; border-radius:16px 16px 0 0; }
+  .popup { padding:1.25rem 1rem; }
+  .popup-grid { grid-template-columns:1fr 1fr; }
+  #map { height:calc(100vh - 160px); }
+  .semaine-section { padding:0.75rem 1rem; }
+  .list-header { padding:0.6rem 1rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="site-label">Classement participatif — France</span>
+  <div class="hero-title">Meilleur<em>Flan</em>.fr</div>
+  <div class="header-bottom">
+    <div class="header-desc">Retrouve le meilleur flan de France et de ta ville</div>
+    <div class="header-stats">
+      <div class="stat"><span class="stat-num" id="stat-flans">0</span><span class="stat-label">Flans</span></div>
+      <div class="stat"><span class="stat-num" id="stat-villes">0</span><span class="stat-label">Villes</span></div>
+      <div class="stat"><span class="stat-num" id="stat-likes">0</span><span class="stat-label">Likes</span></div>
+    </div>
+  </div>
+</header>
+
+<div id="semaine-wrap"></div>
+
+<div class="nav-sticky">
+  <div class="nav-row1">
+    <div class="search-wrap">
+      <span style="opacity:0.3;font-size:1.1rem;flex-shrink:0">⌕</span>
+      <input type="text" id="search" placeholder="Flan, boulangerie, ville…" oninput="render()">
+    </div>
+    <div class="nav-btns">
+      <select class="btn-nav" id="sort" onchange="render()" style="appearance:none;cursor:pointer">
+        <option value="likes">↓ Likes</option>
+        <option value="prix-asc">↑ Prix</option>
+        <option value="prix-desc">↓ Prix</option>
+        <option value="recent">Récent</option>
+      </select>
+      <button class="btn-nav" onclick="showRandom()">🎲</button>
+      <button class="btn-nav" id="btn-map" onclick="toggleMap()">🗺 Carte</button>
+    </div>
+  </div>
+
+  <div class="nav-row2">
+    <div class="cities-scroll" id="cities-scroll"></div>
+    <button class="btn-filter-toggle" id="btn-filter-toggle" onclick="toggleFilterPanel()">
+      Filtrer <span id="filter-count-badge" style="display:none" class="filter-count">0</span> ▾
+    </button>
+  </div>
+
+  <div class="filter-panel" id="filter-panel">
+    <div class="filter-group">
+      <span class="filter-group-label">Appareil :</span>
+      <button class="btn-extra active" data-filter="appareil" data-value="">Tous</button>
+      <button class="btn-extra" data-filter="appareil" data-value="Compact">Compact</button>
+      <button class="btn-extra" data-filter="appareil" data-value="Classique">Classique</button>
+      <button class="btn-extra" data-filter="appareil" data-value="Crémeux">Crémeux</button>
+      <button class="btn-extra" data-filter="appareil" data-value="Coulant">Coulant</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">Pâte :</span>
+      <button class="btn-extra active" data-filter="pate" data-value="">Toutes</button>
+      <button class="btn-extra" data-filter="pate" data-value="Feuilletée et croustillante">Feuilletée</button>
+      <button class="btn-extra" data-filter="pate" data-value="Brisée et beurrée">Brisée</button>
+    </div>
+    <button class="btn-filter-clear" onclick="clearFilters()">Réinitialiser</button>
+  </div>
+</div>
+
+<main>
+  <div id="list-view">
+    <div class="list-header">
+      <span class="list-header-title" id="list-title">🏆 Classement général</span>
+      <span class="list-header-count" id="count-label"></span>
+    </div>
+    <div class="ranking" id="ranking"></div>
+    <div id="show-more-wrap"></div>
+  </div>
+
+  <div id="map-view">
+    <div id="map">
+      <button class="map-back-btn" onclick="toggleMap()">← Retour au classement</button>
+    </div>
+    <div class="map-flanlist" id="map-flanlist"></div>
+  </div>
+</main>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openForm()">＋ Ajouter un flan</button>
+
+<!-- FORM DRAWER -->
+<div class="form-overlay" id="form-overlay" onclick="closeFormOverlay(event)">
+  <div class="form-drawer">
+    <div class="form-drawer-header">
+      <span class="form-drawer-title">Ajouter un flan</span>
+      <button class="btn-drawer-close" onclick="closeForm()">Fermer ✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="dup-error" id="dup-error">Ce flan existe déjà dans cette boulangerie.</div>
+      <div class="form-group"><label>Nom du flan</label><input type="text" id="inp-nom" placeholder="Flan vanille maison" maxlength="60"><span class="field-error" id="err-nom">Requis</span></div>
+      <div class="form-group"><label>Boulangerie</label><input type="text" id="inp-boulangerie" placeholder="Boulangerie Dupont" maxlength="60"><span class="field-error" id="err-boulangerie">Requis</span></div>
+      <div class="form-group"><label>Ville</label><input type="text" id="inp-ville" placeholder="Paris, Lyon, Auch…" maxlength="40"><span class="field-error" id="err-ville">Requis</span></div>
+      <div class="form-group"><label>Prix de la part</label><select id="inp-prix"><option value="">— Choisir —</option><option>Moins de 3€</option><option>3,50€</option><option>4€</option><option>4,50€</option><option>5€</option><option>Plus de 5€</option></select><span class="field-error" id="err-prix">Requis</span></div>
+      <div class="form-group"><label>Date de visite</label><input type="text" id="inp-date" placeholder="ex : mai 2025" maxlength="30"><span class="field-error" id="err-date">Requis</span></div>
+      <div class="form-group"><label>Commentaire <span style="font-weight:400;color:var(--muted)">(optionnel)</span></label><input type="text" id="inp-comment" placeholder="Croûte fine, vanille intense…" maxlength="120"></div>
+      <div class="form-group full"><label>Appareil</label><div class="radio-row"><label class="radio-opt"><input type="radio" name="appareil" value="Compact"> Compact</label><label class="radio-opt"><input type="radio" name="appareil" value="Classique"> Classique</label><label class="radio-opt"><input type="radio" name="appareil" value="Crémeux"> Crémeux</label><label class="radio-opt"><input type="radio" name="appareil" value="Coulant"> Coulant</label></div><span class="field-error" id="err-appareil">Requis</span></div>
+      <div class="form-group full"><label>Pâte</label><div class="radio-row"><label class="radio-opt"><input type="radio" name="pate" value="Feuilletée et croustillante"> Feuilletée et croustillante</label><label class="radio-opt"><input type="radio" name="pate" value="Brisée et beurrée"> Brisée et beurrée</label></div><span class="field-error" id="err-pate">Requis</span></div>
+    </div>
+    <button class="btn-submit" onclick="addFlan()">Ajouter ce flan 🍮</button>
+  </div>
+</div>
+
+<!-- POPUP DÉTAIL -->
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="popup">
+    <div class="popup-label" id="p-label">Détail</div>
+    <div class="popup-name" id="p-name"></div>
+    <div class="popup-bakery" id="p-bakery"></div>
+    <div class="popup-city" id="p-city"></div>
+    <div class="popup-comment" id="p-comment"></div>
+    <div class="popup-grid">
+      <div class="popup-item"><div class="k">Prix</div><div class="v" id="p-prix"></div></div>
+      <div class="popup-item"><div class="k">Appareil</div><div class="v" id="p-appareil"></div></div>
+      <div class="popup-item"><div class="k">Pâte</div><div class="v" id="p-pate"></div></div>
+      <div class="popup-item"><div class="k">Visité</div><div class="v" id="p-date"></div></div>
+    </div>
+    <div class="popup-actions">
+      <button class="popup-close" onclick="document.getElementById('overlay').classList.remove('open')">Fermer</button>
+      <button class="popup-like" id="popup-like-btn" onclick="likeFromPopup()">♥ Liker</button>
+      <button class="popup-share" id="popup-share-btn">↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div class="overlay" id="report-overlay" onclick="closeReportOverlay(event)">
+  <div class="popup report-popup">
+    <h3>Signaler ce flan</h3>
+    <p id="report-text"></p>
+    <div class="report-btns">
+      <button class="btn-report-confirm" onclick="confirmReport()">Confirmer</button>
+      <button class="btn-report-cancel" onclick="document.getElementById('report-overlay').classList.remove('open')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const PRIX_ORDER=["Moins de 3€","3,50€","4€","4,50€","5€","Plus de 5€"];
+const MAX_CITY_BTNS=6, PAGE_SIZE=6, NEW_DAYS=30;
+const DAY=86400000, NOW=Date.now();
+const CITY_COORDS={
+  "Paris":[48.8566,2.3522],"Lyon":[45.7640,4.8357],"Grenoble":[45.1885,5.7245],
+  "Bordeaux":[44.8378,-0.5792],"Rennes":[48.1173,-1.6778],"Sisteron":[44.1978,5.9450],
+  "Marseille":[43.2965,5.3698],"Toulouse":[43.6047,1.4442],"Nantes":[47.2184,-1.5536],
+  "Strasbourg":[48.5734,7.7521],"Lille":[50.6292,3.0573],"Nice":[43.7102,7.2620],
+};
+
+let flans=[
+  {id:1,nom:"Flan parisien au beurre",boulangerie:"Maison Landemaine",ville:"Paris",prix:"3,50€",appareil:"Crémeux",pate:"Feuilletée et croustillante",comment:"Caramel légèrement amer, texture impeccable.",date:"mars 2025",likes:142,liked:false,ts:NOW-60*DAY,reported:false,been:false,beenCount:14},
+  {id:2,nom:"Flan des Traboules",boulangerie:"Boulangerie du Soleil",ville:"Lyon",prix:"4€",appareil:"Coulant",pate:"Brisée et beurrée",comment:"Tremble à la moindre vibration.",date:"avril 2025",likes:89,liked:false,ts:NOW-45*DAY,reported:false,been:false,beenCount:8},
+  {id:3,nom:"Flan aux noix de Grenoble",boulangerie:"Pâtisserie Belledonne",ville:"Grenoble",prix:"4,50€",appareil:"Classique",pate:"Feuilletée et croustillante",comment:"",date:"janvier 2025",likes:61,liked:false,ts:NOW-90*DAY,reported:false,been:false,beenCount:5},
+  {id:4,nom:"Flan à la vanille de Bourbon",boulangerie:"Au Pain d'Antan",ville:"Bordeaux",prix:"3,50€",appareil:"Crémeux",pate:"Brisée et beurrée",comment:"Vanille de Madagascar, ça se sent.",date:"février 2025",likes:47,liked:false,ts:NOW-50*DAY,reported:false,been:false,beenCount:3},
+  {id:5,nom:"Flan breton caramel beurre salé",boulangerie:"Ty Breizh",ville:"Rennes",prix:"4€",appareil:"Coulant",pate:"Feuilletée et croustillante",comment:"",date:"mai 2025",likes:38,liked:false,ts:NOW-10*DAY,reported:false,been:false,beenCount:2},
+  {id:6,nom:"Flan provençal à la lavande",boulangerie:"Boulangerie Lou Pétrin",ville:"Sisteron",prix:"4,50€",appareil:"Classique",pate:"Brisée et beurrée",comment:"Discret sur la lavande, heureusement.",date:"juin 2025",likes:22,liked:false,ts:NOW-5*DAY,reported:false,been:false,beenCount:1},
+  {id:7,nom:"Flan vanille industriel",boulangerie:"Supermarché du Centre",ville:"Paris",prix:"Moins de 3€",appareil:"Compact",pate:"Brisée et beurrée",comment:"",date:"mars 2025",likes:12,liked:false,ts:NOW-3*DAY,reported:false,been:false,beenCount:0},
+];
+
+let cityFilter="all", appareilFilter="", pateFilter="";
+let nextId=8, currentFlan=null, mapVisible=false;
+let showAll=false, leafletMap=null, markers=[];
+let reportFlanId=null, prevFirstId=null;
+let filterPanelOpen=false;
+
+function normalize(s){return s.toLowerCase().trim();}
+function cityCount(){const c={};flans.forEach(f=>{if(!f.reported)c[f.ville]=(c[f.ville]||0)+1;});return c;}
+
+// Extra filter buttons
+document.querySelectorAll(".btn-extra").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const type=btn.dataset.filter;
+    document.querySelectorAll(`.btn-extra[data-filter="${type}"]`).forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    if(type==="appareil") appareilFilter=btn.dataset.value;
+    else pateFilter=btn.dataset.value;
+    updateFilterBadge();
+    showAll=false; render();
+  });
+});
+
+function updateFilterBadge(){
+  const count=(appareilFilter?1:0)+(pateFilter?1:0);
+  const badge=document.getElementById("filter-count-badge");
+  const toggle=document.getElementById("btn-filter-toggle");
+  badge.textContent=count;
+  badge.style.display=count>0?"inline":"none";
+  toggle.classList.toggle("has-active",count>0);
+}
+
+function toggleFilterPanel(){
+  filterPanelOpen=!filterPanelOpen;
+  document.getElementById("filter-panel").classList.toggle("open",filterPanelOpen);
+}
+
+function clearFilters(){
+  appareilFilter=""; pateFilter="";
+  document.querySelectorAll('.btn-extra[data-filter="appareil"]').forEach((b,i)=>b.classList.toggle("active",i===0));
+  document.querySelectorAll('.btn-extra[data-filter="pate"]').forEach((b,i)=>b.classList.toggle("active",i===0));
+  updateFilterBadge(); showAll=false; render();
+}
+
+function sortedList(list){
+  const s=document.getElementById("sort")?.value||"likes";
+  return [...list].sort((a,b)=>{
+    if(s==="likes") return b.likes-a.likes;
+    if(s==="prix-asc") return PRIX_ORDER.indexOf(a.prix)-PRIX_ORDER.indexOf(b.prix);
+    if(s==="prix-desc") return PRIX_ORDER.indexOf(b.prix)-PRIX_ORDER.indexOf(a.prix);
+    if(s==="recent") return b.ts-a.ts;
+    return 0;
+  });
+}
+
+function filtered(){
+  const q=document.getElementById("search").value.toLowerCase().trim();
+  return flans
+    .filter(f=>!f.reported)
+    .filter(f=>cityFilter==="all"||f.ville===cityFilter)
+    .filter(f=>!appareilFilter||f.appareil===appareilFilter)
+    .filter(f=>!pateFilter||f.pate===pateFilter)
+    .filter(f=>!q||f.nom.toLowerCase().includes(q)||f.boulangerie.toLowerCase().includes(q)||f.ville.toLowerCase().includes(q));
+}
+
+function renderCityFilters(){
+  const counts=cityCount();
+  const allCities=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+  const top=allCities.slice(0,MAX_CITY_BTNS), others=allCities.slice(MAX_CITY_BTNS);
+  let html=`<button class="btn-city ${cityFilter==="all"?"active":""}" onclick="setFilter('all')">Toutes</button>`;
+  top.forEach((c,i)=>{
+    if(i>0) html+=`<span class="city-dot"></span>`;
+    html+=`<button class="btn-city ${cityFilter===c?"active":""}" onclick="setFilter('${c.replace(/'/g,"\\'")}')">📍 ${c}</button>`;
+  });
+  if(others.length){html+=`<select class="city-select ${others.includes(cityFilter)?"active":""}" onchange="setFilter(this.value)"><option value="">+ Autres</option>${others.map(c=>`<option value="${esc(c)}" ${cityFilter===c?"selected":""}>${c} (${counts[c]})</option>`).join("")}</select>`;}
+  document.getElementById("cities-scroll").innerHTML=html;
+}
+
+function getFlanDeSemaine(){
+  const week=7*DAY;
+  const recent=flans.filter(f=>!f.reported&&(NOW-f.ts)<week);
+  if(recent.length) return recent.sort((a,b)=>b.likes-a.likes)[0];
+  return flans.filter(f=>!f.reported).sort((a,b)=>b.likes-a.likes)[0]||null;
+}
+
+function renderSemaine(){
+  const f=getFlanDeSemaine();
+  const wrap=document.getElementById("semaine-wrap");
+  if(!f){wrap.innerHTML="";return;}
+  wrap.innerHTML=`
+    <div class="semaine-section" onclick="openPopup(flans.find(x=>x.id===${f.id}),'⭐ Flan de la semaine')">
+      <div class="semaine-inner">
+        <span class="semaine-tag">⭐ Flan de la semaine</span>
+        <span class="semaine-name">${esc(f.nom)}</span>
+        <span class="semaine-sub">${esc(f.boulangerie)}, ${esc(f.ville)}</span>
+        <span class="semaine-likes">${f.likes} ♥</span>
+      </div>
+    </div>`;
+}
+
+function getBadges(f){
+  const b=[];
+  if(f.likes>100) b.push({cls:"badge-legend",text:"👑 Légende"});
+  if(f.appareil==="Coulant") b.push({cls:"badge-seisme",text:"🚨 Haute Secousse"});
+  if(f.nom.toLowerCase().includes("industriel")) b.push({cls:"badge-flamby",text:"⚠️ Risque Flamby"});
+  if((NOW-f.ts)<NEW_DAYS*DAY) b.push({cls:"badge-new",text:"✨ Nouveau"});
+  const semaine=getFlanDeSemaine();
+  if(semaine&&semaine.id===f.id) b.push({cls:"badge-semaine",text:"⭐ Semaine"});
+  return b;
+}
+
+function renderStats(){
+  const active=flans.filter(f=>!f.reported);
+  document.getElementById("stat-flans").textContent=active.length;
+  document.getElementById("stat-villes").textContent=new Set(active.map(f=>f.ville)).size;
+  document.getElementById("stat-likes").textContent=active.reduce((s,f)=>s+f.likes,0);
+}
+
+function render(){
+  renderStats(); renderCityFilters(); renderSemaine();
+  if(mapVisible){renderMap();return;}
+
+  const list=sortedList(filtered());
+  const q=document.getElementById("search").value.toLowerCase().trim();
+  const isGlobal=cityFilter==="all"&&!q&&!appareilFilter&&!pateFilter;
+
+  document.getElementById("list-title").textContent=isGlobal?"🏆 Classement général":`📍 ${cityFilter!=="all"?cityFilter:"Résultats"}`;
+  document.getElementById("count-label").textContent=`${list.length} flan${list.length>1?"s":""}`;
+
+  if(!list.length){document.getElementById("ranking").innerHTML=`<div class="empty">Aucun flan trouvé.</div>`;document.getElementById("show-more-wrap").innerHTML="";return;}
+
+  const newFirstId=list[0]?.id;
+  const justBecameFirst=prevFirstId!==null&&prevFirstId!==newFirstId;
+  prevFirstId=newFirstId;
+
+  const displayList=showAll?list:list.slice(0,PAGE_SIZE);
+  const medals=["🥇","🥈","🥉"];
+
+  document.getElementById("ranking").innerHTML=displayList.map((f,i)=>{
+    const rankClass=i===0?"top1":i===1?"top2":i===2?"top3":"";
+    const globalRank=list.indexOf(f);
+    const medal=medals[globalRank]||"";
+    const bds=getBadges(f).map(b=>`<span class="badge ${b.cls}">${b.text}</span>`).join("");
+    return `
+    <div class="rank-item ${rankClass}" id="ri-${f.id}" onclick="openPopup(flans.find(x=>x.id===${f.id}),'Détail')">
+      <div class="rank-num-col">
+        <span class="rank-n">${globalRank+1}</span>
+        ${medal?`<span class="rank-medal">${medal}</span>`:""}
+      </div>
+      <div class="rank-body">
+        <div class="rank-name">${esc(f.nom)}</div>
+        <div class="rank-where"><strong>${esc(f.boulangerie)}</strong> · ${esc(f.ville)}</div>
+        <div class="rank-pills">
+          <span class="pill pill-prix">${esc(f.prix)}</span>
+          <span class="pill">${esc(f.appareil)}</span>
+          <span class="pill">${esc(f.pate)}</span>
+          ${f.beenCount>0?`<span class="pill" style="background:#e8f5e0;color:#2a7a18;border-color:#a8d898">📍 ${f.beenCount}</span>`:""}
+        </div>
+        ${f.comment?`<div class="rank-comment">"${esc(f.comment)}"</div>`:""}
+        ${bds?`<div class="rank-badges">${bds}</div>`:""}
+      </div>
+      <div class="rank-like-col" onclick="event.stopPropagation()">
+        <div class="rank-likes-num">${f.likes}</div>
+        <div class="rank-likes-label">likes</div>
+        <button class="btn-like ${f.liked?"liked":""}" id="like-${f.id}" onclick="like(${f.id})">${f.liked?"♥":"♡"}</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  if(justBecameFirst){
+    const el=document.getElementById("ri-"+newFirstId);
+    if(el){el.classList.remove("celebrate");void el.offsetWidth;el.classList.add("celebrate");spawnConfettiAt(window.innerWidth/2,200,28);}
+  }
+
+  const wrap=document.getElementById("show-more-wrap");
+  if(!showAll&&list.length>PAGE_SIZE){
+    wrap.innerHTML=`<div class="show-more-wrap"><button class="btn-show-more" onclick="showAll=true;render()">Voir les ${list.length-PAGE_SIZE} autres flans ↓</button></div>`;
+  } else if(showAll&&list.length>PAGE_SIZE){
+    wrap.innerHTML=`<div class="show-more-wrap"><button class="btn-show-more" onclick="showAll=false;render()">Réduire ↑</button></div>`;
+  } else { wrap.innerHTML=""; }
+}
+
+function like(id){
+  const f=flans.find(x=>x.id===id);if(!f)return;
+  f.liked=!f.liked;f.likes+=f.liked?1:-1;
+  const btn=document.getElementById("like-"+id);
+  if(btn){btn.classList.remove("wobble");void btn.offsetWidth;btn.classList.add("wobble");btn.textContent=f.liked?"♥":"♡";btn.addEventListener("animationend",()=>btn.classList.remove("wobble"),{once:true});if(f.liked)spawnConfettiAt(btn.getBoundingClientRect().left+btn.offsetWidth/2,btn.getBoundingClientRect().top);}
+  if(currentFlan&&currentFlan.id===id){const pb=document.getElementById("popup-like-btn");if(pb){pb.textContent=f.liked?"♥ Liké":"♥ Liker";pb.classList.toggle("liked",f.liked);}document.getElementById("p-likes")&&(document.getElementById("p-likes").textContent=f.likes);}
+  render();
+}
+
+function likeFromPopup(){if(!currentFlan)return;like(currentFlan.id);}
+
+function spawnConfettiAt(cx,cy,count=16){
+  const colors=["#f5d84a","#e05520","#3d2008","#fffdf8","#c07830","#a8d898"];
+  for(let i=0;i<count;i++){const el=document.createElement("div");el.className="confetti-piece";el.style.cssText=`left:${cx+(Math.random()-.5)*120}px;top:${cy+(Math.random()-.5)*60}px;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${.6+Math.random()*.6}s;animation-delay:${Math.random()*.15}s;transform:rotate(${Math.random()*360}deg);border-radius:${Math.random()>.5?"50%":"2px"}`;document.body.appendChild(el);el.addEventListener("animationend",()=>el.remove());}
+}
+
+function setFilter(v){cityFilter=v;showAll=false;render();}
+
+function startReport(id){
+  const f=flans.find(x=>x.id===id);if(!f)return;
+  reportFlanId=id;
+  document.getElementById("report-text").textContent=`Signaler "${f.nom}" chez ${f.boulangerie} comme fermé ou incorrect ?`;
+  document.getElementById("report-overlay").classList.add("open");
+}
+
+function confirmReport(){
+  const f=flans.find(x=>x.id===reportFlanId);if(f)f.reported=true;
+  document.getElementById("report-overlay").classList.remove("open");
+  toast("Signalement envoyé, merci !");render();
+}
+
+function closeReportOverlay(e){if(e.target.id==="report-overlay")document.getElementById("report-overlay").classList.remove("open");}
+
+/* MAP */
+function toggleMap(){
+  mapVisible=!mapVisible;
+  document.getElementById("btn-map").classList.toggle("active",mapVisible);
+  document.getElementById("list-view").classList.toggle("hidden",mapVisible);
+  document.getElementById("map-view").classList.toggle("active",mapVisible);
+  document.getElementById("fab").classList.toggle("hidden",mapVisible);
+  if(mapVisible){
+    if(!leafletMap){
+      leafletMap=L.map("map",{zoomControl:true}).setView([46.6,2.3],5);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(leafletMap);
+    }
+    setTimeout(()=>{leafletMap.invalidateSize();renderMap();},60);
+  }
+}
+
+function renderMap(){
+  if(!leafletMap)return;
+  markers.forEach(m=>m.remove());markers=[];
+  const list=sortedList(filtered());
+  const byCity={};
+  list.forEach(f=>{if(!byCity[f.ville])byCity[f.ville]=[];byCity[f.ville].push(f);});
+  Object.entries(byCity).forEach(([ville,fl])=>{
+    const coords=CITY_COORDS[ville];if(!coords)return;
+    const top=fl[0];
+    const total=fl.reduce((s,f)=>s+f.likes,0);
+    const size=Math.max(32,Math.min(56,24+total/5));
+    const icon=L.divIcon({className:"",html:`<div style="width:${size}px;height:${size}px;background:#c07830;border:2.5px solid #3d2008;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:DM Sans,sans-serif;font-size:${Math.max(10,size*0.32)}px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(60,32,8,0.25)">${fl.length}</div>`,iconSize:[size,size],iconAnchor:[size/2,size/2]});
+    const popup=`<div style="padding:10px;min-width:200px">
+      <div style="font-size:0.6rem;font-family:DM Mono,monospace;text-transform:uppercase;letter-spacing:0.1em;color:#9a8878;margin-bottom:6px">${esc(ville)} — ${fl.length} flan${fl.length>1?"s":""}</div>
+      <div class="map-popup-name">${esc(top.nom)}</div>
+      <div class="map-popup-bakery">${esc(top.boulangerie)}</div>
+      <div><span class="map-popup-pill prix">${esc(top.prix)}</span><span class="map-popup-pill">${esc(top.appareil)}</span></div>
+      <div class="map-popup-likes">${top.likes}<span>likes</span></div>
+      ${fl.length>1?`<div class="map-popup-link" onclick="showCityFlansList('${ville.replace(/'/g,"\\'")}')">Voir les ${fl.length} flans ↓</div>`:""}
+    </div>`;
+    const m=L.marker(coords,{icon}).addTo(leafletMap);
+    m.bindPopup(popup,{closeButton:false,maxWidth:280});
+    if(fl.length===1)m.on("click",()=>openPopup(fl[0],"Flan sur la carte"));
+    markers.push(m);
+  });
+  document.getElementById("map-flanlist").innerHTML="";
+}
+
+function showCityFlansList(ville){
+  const fl=sortedList(filtered()).filter(f=>f.ville===ville);
+  const wrap=document.getElementById("map-flanlist");
+  wrap.innerHTML=`<div class="map-flanlist-header">📍 ${esc(ville)}</div>${fl.map(f=>`<div class="map-flan-row" onclick="openPopup(flans.find(x=>x.id===${f.id}),'${esc(ville)}')"><div><div class="map-flan-name">${esc(f.nom)}</div><div class="map-flan-sub">${esc(f.boulangerie)} · ${esc(f.prix)} · ${esc(f.appareil)}</div></div><div class="map-flan-likes">${f.likes} ♥</div></div>`).join("")}`;
+  wrap.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function openPopup(f,label){
+  if(!f)return;currentFlan=f;
+  document.getElementById("p-label").textContent=label||"Détail";
+  document.getElementById("p-name").textContent=f.nom;
+  document.getElementById("p-bakery").textContent=f.boulangerie;
+  document.getElementById("p-city").textContent="📍 "+f.ville;
+  document.getElementById("p-prix").textContent=f.prix;
+  document.getElementById("p-appareil").textContent=f.appareil;
+  document.getElementById("p-pate").textContent=f.pate;
+  document.getElementById("p-date").textContent=f.date||"—";
+  const pc=document.getElementById("p-comment");
+  if(f.comment){pc.textContent=`"${f.comment}"`;pc.classList.add("show");}else{pc.classList.remove("show");}
+  const lb=document.getElementById("popup-like-btn");lb.textContent=f.liked?"♥ Liké":"♥ Liker";lb.classList.toggle("liked",f.liked);
+  document.getElementById("overlay").classList.add("open");
+}
+
+function showRandom(){
+  const list=filtered();if(!list.length){toast("Aucun flan disponible.");return;}
+  if(leafletMap)leafletMap.closePopup();
+  openPopup(list[Math.floor(Math.random()*list.length)],"🎲 Sélection aléatoire");
+}
+
+document.getElementById("popup-share-btn").addEventListener("click",()=>{
+  if(!currentFlan)return;
+  const f=currentFlan;
+  const txt=`${f.nom} — ${f.boulangerie} (${f.ville})\n${f.prix} · ${f.appareil} · ${f.pate}${f.date?" · "+f.date:""}\n${f.likes} likes sur MeilleurFlan.fr${f.comment?'\n"'+f.comment+'"':""}`;
+  navigator.clipboard.writeText(txt).then(()=>toast("Copié !")).catch(()=>toast("Impossible de copier."));
+});
+
+function closeOverlay(e){if(e.target.id==="overlay")document.getElementById("overlay").classList.remove("open");}
+
+/* FORM DRAWER */
+function openForm(){document.getElementById("form-overlay").classList.add("open");document.getElementById("fab").classList.add("hidden");}
+function closeForm(){document.getElementById("form-overlay").classList.remove("open");document.getElementById("fab").classList.remove("hidden");}
+function closeFormOverlay(e){if(e.target.id==="form-overlay")closeForm();}
+
+function clearErrors(){
+  ["nom","boulangerie","ville","prix","date","appareil","pate"].forEach(k=>{document.getElementById("err-"+k)?.classList.remove("show");(document.getElementById("inp-"+k)||document.querySelector(`input[name="${k}"]`))?.classList.remove("error");});
+  document.getElementById("dup-error").classList.remove("show");
+}
+
+function addFlan(){
+  clearErrors();
+  const nom=document.getElementById("inp-nom").value.trim();
+  const boulangerie=document.getElementById("inp-boulangerie").value.trim();
+  const ville=document.getElementById("inp-ville").value.trim();
+  const prix=document.getElementById("inp-prix").value;
+  const comment=document.getElementById("inp-comment").value.trim();
+  const date=document.getElementById("inp-date").value.trim();
+  const appareilEl=document.querySelector('input[name="appareil"]:checked');
+  const pateEl=document.querySelector('input[name="pate"]:checked');
+  let ok=true;
+  if(!nom){document.getElementById("err-nom").classList.add("show");document.getElementById("inp-nom").classList.add("error");ok=false;}
+  if(!boulangerie){document.getElementById("err-boulangerie").classList.add("show");document.getElementById("inp-boulangerie").classList.add("error");ok=false;}
+  if(!ville){document.getElementById("err-ville").classList.add("show");document.getElementById("inp-ville").classList.add("error");ok=false;}
+  if(!prix){document.getElementById("err-prix").classList.add("show");document.getElementById("inp-prix").classList.add("error");ok=false;}
+  if(!date){document.getElementById("err-date").classList.add("show");document.getElementById("inp-date").classList.add("error");ok=false;}
+  if(!appareilEl){document.getElementById("err-appareil").classList.add("show");ok=false;}
+  if(!pateEl){document.getElementById("err-pate").classList.add("show");ok=false;}
+  if(!ok)return;
+  if(flans.some(f=>normalize(f.nom)===normalize(nom)&&normalize(f.boulangerie)===normalize(boulangerie))){document.getElementById("dup-error").classList.add("show");return;}
+  flans.push({id:nextId++,nom,boulangerie,ville,prix,comment,date,appareil:appareilEl.value,pate:pateEl.value,likes:0,liked:false,ts:Date.now(),reported:false,been:false,beenCount:0});
+  ["inp-nom","inp-boulangerie","inp-ville","inp-comment","inp-date"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("inp-prix").value="";
+  document.querySelectorAll('input[name="appareil"],input[name="pate"]').forEach(r=>r.checked=false);
+  closeForm();
+  toast("Flan ajouté ! 🍮");showAll=false;render();window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400);}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+prevFirstId=sortedList(flans.filter(f=>!f.reported))[0]?.id||null;
+render();
+</script>
+</body>
+</html>
