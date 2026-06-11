@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MeilleurFlan.fr</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,22 +25,23 @@
 body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
 
 /* ── HEADER ── */
-header { background:var(--yellow); padding:1.5rem 1.5rem 1.25rem; border-bottom:2px solid rgba(61,32,8,0.15); }
-.site-label { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--brown); opacity:0.5; margin-bottom:0.5rem; display:block; }
+header { background:var(--yellow); padding:1.75rem 1.5rem 1.5rem; border-bottom:2px solid rgba(61,32,8,0.1); background-image:radial-gradient(rgba(61,32,8,0.07) 1.5px, transparent 1.5px); background-size:18px 18px; }
+.site-label { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--brown); opacity:0.45; margin-bottom:0.5rem; display:block; }
 .hero-title { font-family:'Fraunces',serif; font-size:clamp(2.4rem,8vw,5rem); font-weight:900; line-height:0.95; color:var(--brown); letter-spacing:-0.02em; }
 .hero-title em { font-style:italic; color:var(--caramel); }
-.header-bottom { display:flex; align-items:center; justify-content:space-between; margin-top:0.85rem; gap:1rem; flex-wrap:wrap; }
-.header-desc { font-size:0.9rem; color:var(--brown); opacity:0.6; line-height:1.4; }
-.header-stats { display:flex; gap:2rem; flex-shrink:0; }
-.stat { text-align:center; }
-.stat-num { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:900; color:var(--brown); display:block; line-height:1; }
-.stat-label { font-family:'DM Mono',monospace; font-size:0.5rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brown); opacity:0.5; display:block; margin-top:0.15rem; }
+.header-bottom { display:flex; align-items:center; justify-content:space-between; margin-top:1rem; gap:1rem; flex-wrap:wrap; }
+.header-desc { font-size:0.88rem; color:var(--brown); opacity:0.55; line-height:1.4; }
+.header-stats { display:flex; gap:0; flex-shrink:0; background:rgba(61,32,8,0.08); border-radius:14px; padding:0.15rem; }
+.stat { text-align:center; padding:0.45rem 1.1rem; }
+.stat:not(:last-child) { border-right:1px solid rgba(61,32,8,0.1); }
+.stat-num { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:900; color:var(--brown); display:block; line-height:1; }
+.stat-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brown); opacity:0.5; display:block; margin-top:0.15rem; }
 
 /* ── FLAN DE LA SEMAINE ── */
-.semaine-section { background:var(--warm); border-bottom:1px solid var(--border); padding:0.9rem 1.5rem; cursor:pointer; transition:background 0.1s; }
-.semaine-section:hover { background:#fdf0d5; }
+.semaine-section { background:linear-gradient(135deg,#fdf8e0,#fdeec8); border-bottom:1px solid rgba(192,120,48,0.2); padding:0.9rem 1.5rem; cursor:pointer; transition:all 0.15s; }
+.semaine-section:hover { background:linear-gradient(135deg,#fdf0cc,#fce4a8); }
 .semaine-inner { display:flex; align-items:center; gap:1rem; }
-.semaine-tag { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--caramel); font-weight:500; flex-shrink:0; }
+.semaine-tag { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--caramel); font-weight:600; flex-shrink:0; }
 .semaine-name { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .semaine-sub { font-size:0.78rem; color:var(--muted); flex-shrink:0; }
 .semaine-likes { font-family:'Fraunces',serif; font-size:1.2rem; font-weight:900; color:var(--caramel); flex-shrink:0; }
@@ -93,49 +94,51 @@ header { background:var(--yellow); padding:1.5rem 1.5rem 1.25rem; border-bottom:
 /* ── MAIN ── */
 main { padding-bottom:6rem; }
 
-.list-header { padding:0.65rem 1.5rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--bg); }
-.list-header-title { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:var(--text); }
-.list-header-count { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); }
+.list-header { padding:0.7rem 1.5rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--bg); }
+.list-header-title { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:var(--text); letter-spacing:-0.01em; }
+.list-header-count { font-family:'DM Mono',monospace; font-size:0.58rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); background:var(--warm); border:1px solid var(--border); padding:2px 8px; border-radius:999px; }
 
 /* ── RANKING ── */
 .ranking { display:flex; flex-direction:column; }
 
-.rank-item { display:grid; grid-template-columns:52px 1fr 60px; gap:0; align-items:stretch; border-bottom:1px solid var(--border); background:var(--surface); transition:background 0.1s; animation:fadein 0.15s ease both; cursor:pointer; }
-@keyframes fadein { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
-.rank-item:hover { background:var(--warm); }
-.rank-item.top1 { background:#fffdf0; border-left:4px solid var(--yellow); }
-.rank-item.top1:hover { background:#fff9e0; }
+.rank-item { display:grid; grid-template-columns:52px 1fr 60px; gap:0; align-items:stretch; border-bottom:1px solid var(--border); background:var(--surface); transition:background 0.15s, box-shadow 0.15s; animation:fadein 0.18s ease both; cursor:pointer; }
+@keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.rank-item:hover { background:var(--warm); box-shadow:inset 3px 0 0 var(--caramel); }
+.rank-item.top1 { background:linear-gradient(135deg,#fffef2,#fffbe5); border-left:4px solid var(--yellow); }
+.rank-item.top1:hover { background:linear-gradient(135deg,#fffbe5,#fff5cc); box-shadow:inset 3px 0 0 var(--caramel); }
+.rank-item.top2 { border-left:3px solid #d8d0c0; }
+.rank-item.top3 { border-left:3px solid #dcc890; }
 
 .rank-num-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1rem 0; border-right:1px solid var(--border); flex-shrink:0; }
 .rank-n { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:900; color:#d8c8b4; line-height:1; }
-.rank-item.top1 .rank-n { font-size:1.7rem; color:var(--caramel); }
-.rank-item.top2 .rank-n { color:#b8a888; }
-.rank-item.top3 .rank-n { color:#c8a870; }
-.rank-medal { font-size:1rem; line-height:1; margin-top:0.15rem; }
+.rank-item.top1 .rank-n { font-size:1.8rem; color:var(--caramel); }
+.rank-item.top2 .rank-n { color:#a89878; }
+.rank-item.top3 .rank-n { color:#c8a850; }
+.rank-medal { font-size:1.05rem; line-height:1; margin-top:0.2rem; }
 
-.rank-body { padding:0.85rem 1rem; min-width:0; }
+.rank-body { padding:0.9rem 1rem; min-width:0; }
 .rank-name { font-family:'Fraunces',serif; font-size:1.05rem; font-weight:700; line-height:1.25; color:var(--text); margin-bottom:0.1rem; }
 .rank-item.top1 .rank-name { font-size:1.15rem; }
-.rank-where { font-size:0.82rem; color:var(--muted); margin-bottom:0.4rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rank-where { font-size:0.82rem; color:var(--muted); margin-bottom:0.45rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .rank-where strong { color:var(--text); font-weight:500; }
-.rank-pills { display:flex; flex-wrap:wrap; gap:0.25rem; }
-.pill { font-family:'DM Sans',sans-serif; font-size:0.68rem; font-weight:500; padding:2px 7px; border-radius:4px; background:var(--warm); color:var(--muted); border:1px solid var(--border); }
-.pill-prix { background:var(--caramel); color:#fff; border-color:var(--caramel); }
-.rank-comment { font-size:0.78rem; font-style:italic; color:var(--text); opacity:0.5; margin-top:0.35rem; padding-left:0.5rem; border-left:2px solid var(--caramel); line-height:1.4; }
-.rank-badges { display:flex; gap:0.25rem; flex-wrap:wrap; margin-top:0.3rem; }
-.badge { font-family:'DM Sans',sans-serif; font-size:0.65rem; font-weight:500; padding:2px 7px; border-radius:4px; }
+.rank-pills { display:flex; flex-wrap:wrap; gap:0.3rem; }
+.pill { font-family:'DM Sans',sans-serif; font-size:0.7rem; font-weight:500; padding:3px 9px; border-radius:999px; background:var(--warm); color:var(--muted); border:1px solid var(--border); }
+.pill-prix { background:var(--caramel); color:#fff; border-color:var(--caramel); font-weight:600; }
+.rank-comment { font-size:0.78rem; font-style:italic; color:var(--text); opacity:0.5; margin-top:0.4rem; padding-left:0.6rem; border-left:2px solid var(--caramel); line-height:1.45; }
+.rank-badges { display:flex; gap:0.3rem; flex-wrap:wrap; margin-top:0.35rem; }
+.badge { font-family:'DM Sans',sans-serif; font-size:0.65rem; font-weight:600; padding:3px 8px; border-radius:999px; }
 .badge-legend { background:#fff3c4; color:#7a5c00; }
 .badge-seisme { background:#fde8e0; color:#b03010; }
 .badge-flamby { background:#fde8cc; color:#8a4200; }
 .badge-new { background:#e0f5e8; color:#1a7a3a; }
 .badge-semaine { background:#f0e0ff; color:#6a20a8; }
 
-.rank-like-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.75rem 0; border-left:1px solid var(--border); flex-shrink:0; gap:0.3rem; }
-.rank-likes-num { font-family:'Fraunces',serif; font-size:1.3rem; font-weight:900; color:var(--text); line-height:1; }
-.rank-item.top1 .rank-likes-num { color:var(--caramel); font-size:1.5rem; }
+.rank-like-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.75rem 0; border-left:1px solid var(--border); flex-shrink:0; gap:0.35rem; }
+.rank-likes-num { font-family:'Fraunces',serif; font-size:1.35rem; font-weight:900; color:var(--text); line-height:1; }
+.rank-item.top1 .rank-likes-num { color:var(--caramel); font-size:1.55rem; }
 .rank-likes-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
-.btn-like { font-family:'DM Sans',sans-serif; font-size:0.72rem; font-weight:500; background:none; border:1px solid var(--border); color:var(--muted); padding:0.25rem 0.5rem; cursor:pointer; transition:all 0.12s; border-radius:5px; }
-.btn-like:hover { border-color:var(--caramel); color:var(--caramel); }
+.btn-like { font-size:0.88rem; font-weight:600; background:none; border:1.5px solid var(--border); color:var(--muted); padding:0.28rem 0.6rem; cursor:pointer; transition:all 0.15s; border-radius:8px; }
+.btn-like:hover { border-color:var(--caramel); color:var(--caramel); background:#fdf3e4; transform:scale(1.08); }
 .btn-like.liked { background:var(--caramel); border-color:var(--caramel); color:#fff; }
 
 @keyframes wobble { 0%{transform:rotate(0) scale(1)} 20%{transform:rotate(-9deg) scale(1.12)} 40%{transform:rotate(7deg) scale(1.08)} 60%{transform:rotate(-4deg) scale(1.05)} 80%{transform:rotate(2deg) scale(1.02)} 100%{transform:rotate(0) scale(1)} }
@@ -143,9 +146,9 @@ main { padding-bottom:6rem; }
 @keyframes celebrate { 0%{transform:scale(1)} 30%{transform:scale(1.02)} 60%{transform:scale(0.99)} 100%{transform:scale(1)} }
 .celebrate { animation:celebrate 0.4s ease; }
 
-.show-more-wrap { padding:1rem 1.5rem; border-bottom:1px solid var(--border); background:var(--surface); text-align:center; }
-.btn-show-more { font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500; background:none; border:1.5px solid var(--border); color:var(--muted); padding:0.6rem 2rem; border-radius:8px; cursor:pointer; transition:all 0.12s; }
-.btn-show-more:hover { border-color:var(--caramel); color:var(--caramel); }
+.show-more-wrap { padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); background:var(--surface); text-align:center; }
+.btn-show-more { font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:600; background:none; border:1.5px solid var(--border); color:var(--muted); padding:0.65rem 2.5rem; border-radius:999px; cursor:pointer; transition:all 0.15s; letter-spacing:0.01em; }
+.btn-show-more:hover { border-color:var(--caramel); color:var(--caramel); background:#fdf3e4; }
 
 .empty { padding:4rem 2rem; font-size:1rem; color:var(--muted); text-align:center; font-style:italic; background:var(--surface); }
 
@@ -227,7 +230,7 @@ main { padding-bottom:6rem; }
 /* ── POPUP DÉTAIL ── */
 .overlay { display:none; position:fixed; inset:0; background:rgba(42,21,5,0.4); z-index:620; align-items:center; justify-content:center; padding:1rem; }
 .overlay.open { display:flex; }
-.popup { background:var(--surface); border-radius:14px; border:1px solid var(--border); box-shadow:0 8px 32px rgba(60,32,8,0.12); padding:1.75rem; max-width:400px; width:100%; animation:popin 0.22s cubic-bezier(0.34,1.4,0.64,1); max-height:90vh; overflow-y:auto; }
+.popup { background:var(--surface); border-radius:20px; border:1px solid var(--border); box-shadow:0 16px 48px rgba(60,32,8,0.16); padding:1.75rem; max-width:400px; width:100%; animation:popin 0.22s cubic-bezier(0.34,1.4,0.64,1); max-height:90vh; overflow-y:auto; }
 @keyframes popin { from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:scale(1)} }
 .popup-label { font-family:'DM Mono',monospace; font-size:0.58rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); margin-bottom:0.5rem; }
 .popup-name { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:700; color:var(--text); line-height:1.2; margin-bottom:0.2rem; }
