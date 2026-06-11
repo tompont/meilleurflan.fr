@@ -258,8 +258,8 @@ main { padding-bottom:6rem; }
 .btn-report-cancel { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; background:none; color:var(--muted); border:1.5px solid var(--border); padding:0.6rem 1.2rem; border-radius:8px; cursor:pointer; }
 
 /* TOAST */
-.toast { position:fixed; bottom:5rem; left:50%; transform:translateX(-50%) translateY(60px); background:var(--text); color:#fff; padding:0.65rem 1.25rem; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; z-index:999; transition:transform 0.22s ease; white-space:nowrap; border-radius:8px; box-shadow:0 4px 16px rgba(60,32,8,0.15); }
-.toast.show { transform:translateX(-50%) translateY(0); }
+.toast { position:fixed; bottom:5rem; left:50%; transform:translateX(-50%) translateY(150px); opacity:0; background:var(--text); color:#fff; padding:0.65rem 1.25rem; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; z-index:999; transition:transform 0.22s ease, opacity 0.22s ease; white-space:nowrap; border-radius:8px; box-shadow:0 4px 16px rgba(60,32,8,0.15); }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
 @media (max-width:620px) {
   header { padding:1.25rem 1rem 1rem; }
@@ -426,7 +426,19 @@ main { padding-bottom:6rem; }
 <div class="toast" id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
+firebase.initializeApp({
+  apiKey:"AIzaSyC8ggwK5WfFGmpjzaHuxc-tkwRnKUm-C94",
+  authDomain:"meilleurflan.firebaseapp.com",
+  projectId:"meilleurflan",
+  storageBucket:"meilleurflan.firebasestorage.app",
+  messagingSenderId:"1004619012500",
+  appId:"1:1004619012500:web:d98b09d4d4fe5ca86a1781"
+});
+const db=firebase.firestore();
+
 const PRIX_ORDER=["Moins de 3€","3,50€","4€","4,50€","5€","Plus de 5€"];
 const MAX_CITY_BTNS=6, PAGE_SIZE=6, NEW_DAYS=30;
 const DAY=86400000, NOW=Date.now();
@@ -437,18 +449,18 @@ const CITY_COORDS={
   "Strasbourg":[48.5734,7.7521],"Lille":[50.6292,3.0573],"Nice":[43.7102,7.2620],
 };
 
-let flans=[
-  {id:1,nom:"Flan parisien au beurre",boulangerie:"Maison Landemaine",ville:"Paris",prix:"3,50€",appareil:"Crémeux",pate:"Feuilletée et croustillante",comment:"Caramel légèrement amer, texture impeccable.",date:"mars 2025",likes:142,liked:false,ts:NOW-60*DAY,reported:false,been:false,beenCount:14},
-  {id:2,nom:"Flan des Traboules",boulangerie:"Boulangerie du Soleil",ville:"Lyon",prix:"4€",appareil:"Coulant",pate:"Brisée et beurrée",comment:"Tremble à la moindre vibration.",date:"avril 2025",likes:89,liked:false,ts:NOW-45*DAY,reported:false,been:false,beenCount:8},
-  {id:3,nom:"Flan aux noix de Grenoble",boulangerie:"Pâtisserie Belledonne",ville:"Grenoble",prix:"4,50€",appareil:"Classique",pate:"Feuilletée et croustillante",comment:"",date:"janvier 2025",likes:61,liked:false,ts:NOW-90*DAY,reported:false,been:false,beenCount:5},
-  {id:4,nom:"Flan à la vanille de Bourbon",boulangerie:"Au Pain d'Antan",ville:"Bordeaux",prix:"3,50€",appareil:"Crémeux",pate:"Brisée et beurrée",comment:"Vanille de Madagascar, ça se sent.",date:"février 2025",likes:47,liked:false,ts:NOW-50*DAY,reported:false,been:false,beenCount:3},
-  {id:5,nom:"Flan breton caramel beurre salé",boulangerie:"Ty Breizh",ville:"Rennes",prix:"4€",appareil:"Coulant",pate:"Feuilletée et croustillante",comment:"",date:"mai 2025",likes:38,liked:false,ts:NOW-10*DAY,reported:false,been:false,beenCount:2},
-  {id:6,nom:"Flan provençal à la lavande",boulangerie:"Boulangerie Lou Pétrin",ville:"Sisteron",prix:"4,50€",appareil:"Classique",pate:"Brisée et beurrée",comment:"Discret sur la lavande, heureusement.",date:"juin 2025",likes:22,liked:false,ts:NOW-5*DAY,reported:false,been:false,beenCount:1},
-  {id:7,nom:"Flan vanille industriel",boulangerie:"Supermarché du Centre",ville:"Paris",prix:"Moins de 3€",appareil:"Compact",pate:"Brisée et beurrée",comment:"",date:"mars 2025",likes:12,liked:false,ts:NOW-3*DAY,reported:false,been:false,beenCount:0},
+const SEED=[
+  {nom:"Flan parisien au beurre",boulangerie:"Maison Landemaine",ville:"Paris",prix:"3,50€",appareil:"Crémeux",pate:"Feuilletée et croustillante",comment:"Caramel légèrement amer, texture impeccable.",date:"mars 2025",likes:142,ts:NOW-60*DAY,reported:false,beenCount:14},
+  {nom:"Flan des Traboules",boulangerie:"Boulangerie du Soleil",ville:"Lyon",prix:"4€",appareil:"Coulant",pate:"Brisée et beurrée",comment:"Tremble à la moindre vibration.",date:"avril 2025",likes:89,ts:NOW-45*DAY,reported:false,beenCount:8},
+  {nom:"Flan aux noix de Grenoble",boulangerie:"Pâtisserie Belledonne",ville:"Grenoble",prix:"4,50€",appareil:"Classique",pate:"Feuilletée et croustillante",comment:"",date:"janvier 2025",likes:61,ts:NOW-90*DAY,reported:false,beenCount:5},
+  {nom:"Flan à la vanille de Bourbon",boulangerie:"Au Pain d'Antan",ville:"Bordeaux",prix:"3,50€",appareil:"Crémeux",pate:"Brisée et beurrée",comment:"Vanille de Madagascar, ça se sent.",date:"février 2025",likes:47,ts:NOW-50*DAY,reported:false,beenCount:3},
+  {nom:"Flan breton caramel beurre salé",boulangerie:"Ty Breizh",ville:"Rennes",prix:"4€",appareil:"Coulant",pate:"Feuilletée et croustillante",comment:"",date:"mai 2025",likes:38,ts:NOW-10*DAY,reported:false,beenCount:2},
+  {nom:"Flan provençal à la lavande",boulangerie:"Boulangerie Lou Pétrin",ville:"Sisteron",prix:"4,50€",appareil:"Classique",pate:"Brisée et beurrée",comment:"Discret sur la lavande, heureusement.",date:"juin 2025",likes:22,ts:NOW-5*DAY,reported:false,beenCount:1},
+  {nom:"Flan vanille industriel",boulangerie:"Supermarché du Centre",ville:"Paris",prix:"Moins de 3€",appareil:"Compact",pate:"Brisée et beurrée",comment:"",date:"mars 2025",likes:12,ts:NOW-3*DAY,reported:false,beenCount:0},
 ];
 
-let cityFilter="all", appareilFilter="", pateFilter="";
-let nextId=8, currentFlan=null, mapVisible=false;
+let flans=[], cityFilter="all", appareilFilter="", pateFilter="";
+let currentFlan=null, mapVisible=false;
 let showAll=false, leafletMap=null, markers=[];
 let reportFlanId=null, prevFirstId=null;
 let filterPanelOpen=false, mapNeedsCenter=true;
@@ -536,7 +548,7 @@ function renderSemaine(){
   const wrap=document.getElementById("semaine-wrap");
   if(!f){wrap.innerHTML="";return;}
   wrap.innerHTML=`
-    <div class="semaine-section" onclick="openPopup(flans.find(x=>x.id===${f.id}),'⭐ Flan de la semaine')">
+    <div class="semaine-section" onclick="openPopup(flans.find(x=>x.id==='${f.id}'),'⭐ Flan de la semaine')">
       <div class="semaine-inner">
         <span class="semaine-tag">⭐ Flan de la semaine</span>
         <span class="semaine-name">${esc(f.nom)}</span>
@@ -590,7 +602,7 @@ function render(){
     const medal=medals[globalRank]||"";
     const bds=getBadges(f).map(b=>`<span class="badge ${b.cls}">${b.text}</span>`).join("");
     return `
-    <div class="rank-item ${rankClass}" id="ri-${f.id}" onclick="openPopup(flans.find(x=>x.id===${f.id}),'Détail')">
+    <div class="rank-item ${rankClass}" id="ri-${f.id}" onclick="openPopup(flans.find(x=>x.id==='${f.id}'),'Détail')">
       <div class="rank-num-col">
         <span class="rank-n">${globalRank+1}</span>
         ${medal?`<span class="rank-medal">${medal}</span>`:""}
@@ -610,7 +622,7 @@ function render(){
       <div class="rank-like-col" onclick="event.stopPropagation()">
         <div class="rank-likes-num">${f.likes}</div>
         <div class="rank-likes-label">likes</div>
-        <button class="btn-like ${f.liked?"liked":""}" id="like-${f.id}" onclick="like(${f.id})">${f.liked?"♥":"♡"}</button>
+        <button class="btn-like ${f.liked?"liked":""}" id="like-${f.id}" onclick="like('${f.id}')">${f.liked?"♥":"♡"}</button>
       </div>
     </div>`;
   }).join("");
@@ -628,13 +640,18 @@ function render(){
   } else { wrap.innerHTML=""; }
 }
 
-function like(id){
+async function like(id){
+  const likedMap=JSON.parse(localStorage.getItem('mf_liked')||'{}');
+  const wasLiked=!!likedMap[id];
   const f=flans.find(x=>x.id===id);if(!f)return;
-  f.liked=!f.liked;f.likes+=f.liked?1:-1;
+  f.liked=!wasLiked; f.likes+=f.liked?1:-1;
+  if(f.liked)likedMap[id]=true; else delete likedMap[id];
+  localStorage.setItem('mf_liked',JSON.stringify(likedMap));
   const btn=document.getElementById("like-"+id);
   if(btn){btn.classList.remove("wobble");void btn.offsetWidth;btn.classList.add("wobble");btn.textContent=f.liked?"♥":"♡";btn.addEventListener("animationend",()=>btn.classList.remove("wobble"),{once:true});if(f.liked)spawnConfettiAt(btn.getBoundingClientRect().left+btn.offsetWidth/2,btn.getBoundingClientRect().top);}
-  if(currentFlan&&currentFlan.id===id){const pb=document.getElementById("popup-like-btn");if(pb){pb.textContent=f.liked?"♥ Liké":"♥ Liker";pb.classList.toggle("liked",f.liked);}document.getElementById("p-likes")&&(document.getElementById("p-likes").textContent=f.likes);}
+  if(currentFlan&&currentFlan.id===id){const pb=document.getElementById("popup-like-btn");if(pb){pb.textContent=f.liked?"♥ Liké":"♥ Liker";pb.classList.toggle("liked",f.liked);}}
   render();
+  await db.collection("flans").doc(id).update({likes:firebase.firestore.FieldValue.increment(wasLiked?-1:1)});
 }
 
 function likeFromPopup(){if(!currentFlan)return;like(currentFlan.id);}
@@ -653,10 +670,10 @@ function startReport(id){
   document.getElementById("report-overlay").classList.add("open");
 }
 
-function confirmReport(){
-  const f=flans.find(x=>x.id===reportFlanId);if(f)f.reported=true;
+async function confirmReport(){
+  if(reportFlanId) await db.collection("flans").doc(reportFlanId).update({reported:true});
   document.getElementById("report-overlay").classList.remove("open");
-  toast("Signalement envoyé, merci !");render();
+  toast("Signalement envoyé, merci !");
 }
 
 function closeReportOverlay(e){if(e.target.id==="report-overlay")document.getElementById("report-overlay").classList.remove("open");}
@@ -733,7 +750,7 @@ function locateMe(){
 function showCityFlansList(ville){
   const fl=sortedList(filtered()).filter(f=>f.ville===ville);
   const wrap=document.getElementById("map-flanlist");
-  wrap.innerHTML=`<div class="map-flanlist-header">📍 ${esc(ville)}<button class="map-flanlist-close" onclick="document.getElementById('map-flanlist').classList.remove('open')">✕</button></div>${fl.map(f=>`<div class="map-flan-row" onclick="openPopup(flans.find(x=>x.id===${f.id}),'${esc(ville)}')"><div><div class="map-flan-name">${esc(f.nom)}</div><div class="map-flan-sub">${esc(f.boulangerie)} · ${esc(f.prix)} · ${esc(f.appareil)}</div></div><div class="map-flan-likes">${f.likes} ♥</div></div>`).join("")}`;
+  wrap.innerHTML=`<div class="map-flanlist-header">📍 ${esc(ville)}<button class="map-flanlist-close" onclick="document.getElementById('map-flanlist').classList.remove('open')">✕</button></div>${fl.map(f=>`<div class="map-flan-row" onclick="openPopup(flans.find(x=>x.id==='${f.id}'),'${esc(ville)}')"><div><div class="map-flan-name">${esc(f.nom)}</div><div class="map-flan-sub">${esc(f.boulangerie)} · ${esc(f.prix)} · ${esc(f.appareil)}</div></div><div class="map-flan-likes">${f.likes} ♥</div></div>`).join("")}`;
   wrap.classList.add("open");
 }
 
@@ -778,7 +795,7 @@ function clearErrors(){
   document.getElementById("dup-error").classList.remove("show");
 }
 
-function addFlan(){
+async function addFlan(){
   clearErrors();
   const nom=document.getElementById("inp-nom").value.trim();
   const boulangerie=document.getElementById("inp-boulangerie").value.trim();
@@ -798,19 +815,35 @@ function addFlan(){
   if(!pateEl){document.getElementById("err-pate").classList.add("show");ok=false;}
   if(!ok)return;
   if(flans.some(f=>normalize(f.nom)===normalize(nom)&&normalize(f.boulangerie)===normalize(boulangerie))){document.getElementById("dup-error").classList.add("show");return;}
-  flans.push({id:nextId++,nom,boulangerie,ville,prix,comment,date,appareil:appareilEl.value,pate:pateEl.value,likes:0,liked:false,ts:Date.now(),reported:false,been:false,beenCount:0});
-  ["inp-nom","inp-boulangerie","inp-ville","inp-comment","inp-date"].forEach(id=>document.getElementById(id).value="");
-  document.getElementById("inp-prix").value="";
-  document.querySelectorAll('input[name="appareil"],input[name="pate"]').forEach(r=>r.checked=false);
-  closeForm();
-  toast("Flan ajouté ! 🍮");showAll=false;render();window.scrollTo({top:0,behavior:"smooth"});
+  try{
+    await db.collection("flans").add({nom,boulangerie,ville,prix,comment,date,appareil:appareilEl.value,pate:pateEl.value,likes:0,ts:Date.now(),reported:false,beenCount:0});
+    ["inp-nom","inp-boulangerie","inp-ville","inp-comment","inp-date"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("inp-prix").value="";
+    document.querySelectorAll('input[name="appareil"],input[name="pate"]').forEach(r=>r.checked=false);
+    closeForm();
+    toast("Flan ajouté ! 🍮");showAll=false;window.scrollTo({top:0,behavior:"smooth"});
+  }catch(e){toast("Erreur lors de l'ajout, réessaie.");}
 }
 
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400);}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
-prevFirstId=sortedList(flans.filter(f=>!f.reported))[0]?.id||null;
-render();
+async function initFirestore(){
+  document.getElementById("ranking").innerHTML=`<div class="empty">Chargement…</div>`;
+  const snap=await db.collection("flans").limit(1).get();
+  if(snap.empty){
+    const batch=db.batch();
+    SEED.forEach(flan=>batch.set(db.collection("flans").doc(),flan));
+    await batch.commit();
+  }
+  db.collection("flans").onSnapshot(snapshot=>{
+    const likedMap=JSON.parse(localStorage.getItem('mf_liked')||'{}');
+    flans=snapshot.docs.map(doc=>({id:doc.id,...doc.data(),liked:!!likedMap[doc.id]}));
+    render();
+  });
+}
+
+initFirestore();
 </script>
 </body>
 </html>
