@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MeilleurFlan.fr</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,7 +17,7 @@
   --brown: #3d2008;
   --border: #e8dbc8;
   --muted: #9a8878;
-  --yellow: #f5d84a;
+  --yellow: #FFD23F;
   --orange: #e05520;
   --text: #2a1505;
 }
@@ -27,14 +27,14 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 /* ── HEADER ── */
 header { background:var(--yellow); padding:1.75rem 1.5rem 1.5rem; border-bottom:2px solid rgba(61,32,8,0.1); background-image:radial-gradient(rgba(61,32,8,0.07) 1.5px, transparent 1.5px); background-size:18px 18px; }
 .site-label { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--brown); opacity:0.45; margin-bottom:0.5rem; display:block; }
-.hero-title { font-family:'Fraunces',serif; font-size:clamp(2.4rem,8vw,5rem); font-weight:900; line-height:0.95; color:var(--brown); letter-spacing:-0.02em; }
-.hero-title em { font-style:italic; color:var(--caramel); }
+.hero-title { font-family:'Bricolage Grotesque',sans-serif; font-size:clamp(2.6rem,9vw,5.5rem); font-weight:800; line-height:0.9; color:var(--brown); letter-spacing:-0.04em; text-transform:lowercase; }
+.hero-title em { font-style:normal; color:var(--caramel); font-weight:800; }
 .header-bottom { display:flex; align-items:center; justify-content:space-between; margin-top:1rem; gap:1rem; flex-wrap:wrap; }
 .header-desc { font-size:0.88rem; color:var(--brown); opacity:0.55; line-height:1.4; }
 .header-stats { display:flex; gap:0; flex-shrink:0; background:rgba(61,32,8,0.08); border-radius:14px; padding:0.15rem; }
 .stat { text-align:center; padding:0.45rem 1.1rem; }
 .stat:not(:last-child) { border-right:1px solid rgba(61,32,8,0.1); }
-.stat-num { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:900; color:var(--brown); display:block; line-height:1; }
+.stat-num { font-family:'Bricolage Grotesque',sans-serif; font-size:1.4rem; font-weight:800; color:var(--brown); display:block; line-height:1; }
 .stat-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brown); opacity:0.5; display:block; margin-top:0.15rem; }
 
 /* ── FLAN DE LA SEMAINE ── */
@@ -110,7 +110,7 @@ main { padding-bottom:6rem; }
 .rank-item.top3 { border-left:3px solid #dcc890; }
 
 .rank-num-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1rem 0; border-right:1px solid var(--border); flex-shrink:0; }
-.rank-n { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:900; color:#d8c8b4; line-height:1; }
+.rank-n { font-family:'Bricolage Grotesque',sans-serif; font-size:1.4rem; font-weight:800; color:#d8c8b4; line-height:1; letter-spacing:-0.03em; }
 .rank-item.top1 .rank-n { font-size:1.8rem; color:var(--caramel); }
 .rank-item.top2 .rank-n { color:#a89878; }
 .rank-item.top3 .rank-n { color:#c8a850; }
@@ -266,7 +266,7 @@ main { padding-bottom:6rem; }
 
 @media (max-width:620px) {
   header { padding:1.25rem 1rem 1rem; }
-  .hero-title { font-size:clamp(2rem,10vw,3rem); }
+  .hero-title { font-size:clamp(2.2rem,11vw,3.5rem); }
   .header-stats { gap:1.25rem; }
   .stat-num { font-size:1.2rem; }
   .nav-row1 { height:46px; }
