@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MeilleurFlan.fr</title>
-<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,7 +17,9 @@
   --brown: #3d2008;
   --border: #e8dbc8;
   --muted: #9a8878;
-  --yellow: #FFF3DC;
+  --yellow: #FFF8EE;
+  --blue: #2151b4;
+  --blue-light: rgba(33,81,180,0.08);
   --orange: #e05520;
   --text: #2a1505;
 }
@@ -25,17 +27,17 @@
 body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
 
 /* ── HEADER ── */
-header { background-color:var(--yellow); background-image:radial-gradient(circle,rgba(61,32,8,0.22) 1px,transparent 1px); background-size:14px 14px; padding:1.75rem 1.5rem 1.5rem; border-bottom:3px solid var(--brown); }
-.site-label { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--brown); opacity:0.45; margin-bottom:0.5rem; display:block; }
-.hero-title { font-family:'Abril Fatface',serif; font-size:clamp(3.2rem,11vw,7rem); font-weight:400; line-height:0.88; color:var(--brown); letter-spacing:-0.02em; }
-.hero-title em { font-style:italic; color:var(--caramel); }
+header { background-color:var(--yellow); background-image:radial-gradient(circle,rgba(61,32,8,0.28) 1.2px,transparent 1.2px); background-size:32px 32px; padding:1.75rem 1.5rem 1.5rem; border-bottom:3px solid var(--blue); }
+.site-label { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--caramel); margin-bottom:0.5rem; display:block; }
+.hero-title { font-family:'Fraunces',serif; font-size:clamp(2.8rem,10vw,6rem); font-weight:900; font-style:normal; line-height:0.88; color:var(--brown); letter-spacing:-0.02em; }
+.hero-title em { font-style:italic; color:var(--blue); }
 .header-bottom { display:flex; align-items:center; justify-content:space-between; margin-top:1rem; gap:1rem; flex-wrap:wrap; }
-.header-desc { font-size:0.88rem; color:var(--brown); opacity:0.55; line-height:1.4; }
-.header-stats { display:flex; gap:0; flex-shrink:0; background:rgba(61,32,8,0.08); border-radius:14px; padding:0.15rem; }
+.header-desc { font-size:0.88rem; color:var(--caramel-dark); opacity:0.75; line-height:1.4; }
+.header-stats { display:flex; gap:0; flex-shrink:0; background:rgba(61,32,8,0.07); border-radius:14px; padding:0.15rem; border:1.5px solid rgba(192,120,48,0.25); }
 .stat { text-align:center; padding:0.45rem 1.1rem; }
-.stat:not(:last-child) { border-right:1px solid rgba(61,32,8,0.1); }
+.stat:not(:last-child) { border-right:1px solid rgba(192,120,48,0.2); }
 .stat-num { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:900; color:var(--brown); display:block; line-height:1; }
-.stat-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brown); opacity:0.5; display:block; margin-top:0.15rem; }
+.stat-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brown); opacity:0.45; display:block; margin-top:0.15rem; }
 
 /* ── FLAN DE LA SEMAINE ── */
 .semaine-section { background:linear-gradient(135deg,#fdf8e0,#fdeec8); border-bottom:1px solid rgba(192,120,48,0.2); padding:0.9rem 1.5rem; cursor:pointer; transition:all 0.15s; }
@@ -60,7 +62,7 @@ header { background-color:var(--yellow); background-image:radial-gradient(circle
 .btn-nav { font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:500; background:none; border:none; border-left:1px solid var(--border); padding:0 1rem; cursor:pointer; color:var(--muted); white-space:nowrap; transition:all 0.12s; display:flex; align-items:center; gap:0.3rem; }
 .btn-nav:first-child { border-left:none; }
 .btn-nav:hover { color:var(--text); background:var(--warm); }
-.btn-nav.active { background:var(--caramel); color:#fff; font-weight:600; }
+.btn-nav.active { background:var(--blue); color:#fff; font-weight:600; }
 
 /* Ligne 2 : villes + filtre btn */
 .nav-row2 { display:flex; align-items:center; height:44px; }
@@ -70,7 +72,7 @@ header { background-color:var(--yellow); background-image:radial-gradient(circle
 
 .btn-city { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; background:none; border:none; border-radius:6px; padding:0.3rem 0.8rem; cursor:pointer; color:var(--muted); white-space:nowrap; flex-shrink:0; transition:all 0.12s; }
 .btn-city:hover { color:var(--text); background:var(--warm); }
-.btn-city.active { color:var(--caramel); font-weight:700; background:#fdf0dc; }
+.btn-city.active { color:var(--blue); font-weight:700; background:var(--blue-light); }
 .city-dot { width:4px; height:4px; border-radius:50%; background:var(--border); flex-shrink:0; margin:0 0.1rem; }
 
 .city-select { font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; background:none; border:none; color:var(--muted); padding:0.3rem 0.6rem; cursor:pointer; outline:none; appearance:none; flex-shrink:0; }
@@ -88,7 +90,7 @@ header { background-color:var(--yellow); background-image:radial-gradient(circle
 .filter-group-label { font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:600; color:var(--muted); white-space:nowrap; }
 .btn-extra { font-family:'DM Sans',sans-serif; font-size:0.8rem; font-weight:500; background:var(--bg); border:1.5px solid var(--border); color:var(--muted); padding:0.25rem 0.85rem; border-radius:999px; cursor:pointer; transition:all 0.12s; white-space:nowrap; }
 .btn-extra:hover { border-color:var(--caramel); color:var(--caramel); }
-.btn-extra.active { background:var(--caramel); border-color:var(--caramel); color:#fff; font-weight:600; }
+.btn-extra.active { background:var(--blue); border-color:var(--blue); color:#fff; font-weight:600; }
 .btn-filter-clear { font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:500; background:none; border:none; color:var(--orange); cursor:pointer; padding:0 0.25rem; text-decoration:underline; }
 
 /* ── MAIN ── */
@@ -266,7 +268,7 @@ main { padding-bottom:6rem; }
 
 @media (max-width:620px) {
   header { padding:1.25rem 1rem 1rem; }
-  .hero-title { font-size:clamp(2.8rem,13vw,4.5rem); }
+  .hero-title { font-size:clamp(2.2rem,10vw,3.5rem); }
   .header-stats { gap:1.25rem; }
   .stat-num { font-size:1.2rem; }
   .nav-row1 { height:46px; }
