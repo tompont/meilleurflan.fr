@@ -103,24 +103,27 @@ main { padding-bottom:6rem; }
 /* ── RANKING ── */
 .ranking { display:flex; flex-direction:column; }
 
-.rank-item { display:grid; grid-template-columns:52px 1fr 60px; gap:0; align-items:stretch; border-bottom:1px solid var(--border); background:var(--surface); transition:background 0.15s, box-shadow 0.15s; animation:fadein 0.18s ease both; cursor:pointer; }
-@keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-.rank-item:hover { background:var(--warm); box-shadow:inset 3px 0 0 var(--caramel); }
-.rank-item.top1 { background:linear-gradient(135deg,#fffef2,#fffbe5); border-left:4px solid var(--yellow); }
-.rank-item.top1:hover { background:linear-gradient(135deg,#fffbe5,#fff5cc); box-shadow:inset 3px 0 0 var(--caramel); }
-.rank-item.top2 { border-left:3px solid #d8d0c0; }
-.rank-item.top3 { border-left:3px solid #dcc890; }
+@keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.rank-item { display:grid; grid-template-columns:52px 1fr 60px; gap:0; align-items:stretch; border-bottom:1px solid var(--border); background:var(--surface); transition:background 0.18s, box-shadow 0.18s, transform 0.18s; animation:fadein 0.28s ease both; cursor:pointer; position:relative; }
+.rank-item:nth-child(1){animation-delay:0ms}.rank-item:nth-child(2){animation-delay:55ms}.rank-item:nth-child(3){animation-delay:110ms}.rank-item:nth-child(4){animation-delay:165ms}.rank-item:nth-child(5){animation-delay:220ms}
+.rank-item:hover { background:var(--warm); box-shadow:0 4px 20px rgba(61,32,8,0.09),inset 3px 0 0 var(--caramel); transform:translateY(-1px); z-index:2; }
+
+.rank-item.top1 { background:linear-gradient(135deg,#fff8e8,#fdeec0,#fde0a0); border-left:none; border-bottom:2px solid rgba(192,120,48,0.3); overflow:hidden; isolation:isolate; }
+.rank-item.top1::before { content:"1"; position:absolute; right:0.1em; top:-0.18em; font-family:'Fraunces',serif; font-size:11rem; font-weight:900; color:var(--caramel); opacity:0.07; line-height:1; pointer-events:none; user-select:none; z-index:-1; }
+.rank-item.top1:hover { background:linear-gradient(135deg,#fff0d8,#fde4a0,#fcd678); box-shadow:0 6px 28px rgba(192,120,48,0.18),inset 4px 0 0 var(--caramel); }
+.rank-item.top2 { border-left:4px solid #c8b898; }
+.rank-item.top3 { border-left:4px solid #d4b848; }
 
 .rank-num-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1rem 0; border-right:1px solid var(--border); flex-shrink:0; }
 .rank-n { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:900; color:#d8c8b4; line-height:1; }
-.rank-item.top1 .rank-n { font-size:1.8rem; color:var(--caramel); }
-.rank-item.top2 .rank-n { color:#a89878; }
-.rank-item.top3 .rank-n { color:#c8a850; }
+.rank-item.top1 .rank-n { font-size:2.4rem; color:var(--caramel); }
+.rank-item.top2 .rank-n { font-size:1.8rem; color:#a89878; }
+.rank-item.top3 .rank-n { font-size:1.7rem; color:#c8a850; }
 .rank-medal { font-size:1.05rem; line-height:1; margin-top:0.2rem; }
 
 .rank-body { padding:0.9rem 1rem; min-width:0; }
 .rank-name { font-family:'Fraunces',serif; font-size:1.12rem; font-weight:700; line-height:1.2; color:var(--text); margin-bottom:0.1rem; }
-.rank-item.top1 .rank-name { font-size:1.28rem; }
+.rank-item.top1 .rank-name { font-size:1.55rem; }
 .rank-where { font-size:0.82rem; color:var(--muted); margin-bottom:0.45rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .rank-where strong { color:var(--text); font-weight:500; }
 .rank-pills { display:flex; flex-wrap:wrap; gap:0.3rem; }
@@ -141,7 +144,7 @@ main { padding-bottom:6rem; }
 
 .rank-like-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.75rem 0; border-left:1px solid var(--border); flex-shrink:0; gap:0.35rem; }
 .rank-likes-num { font-family:'Fraunces',serif; font-size:1.35rem; font-weight:900; color:var(--text); line-height:1; }
-.rank-item.top1 .rank-likes-num { color:var(--caramel); font-size:1.55rem; }
+.rank-item.top1 .rank-likes-num { color:var(--caramel); font-size:1.8rem; }
 .rank-likes-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
 .btn-like { font-size:0.88rem; font-weight:600; background:none; border:1.5px solid var(--border); color:var(--muted); padding:0.28rem 0.6rem; cursor:pointer; transition:all 0.15s; border-radius:8px; position:relative; overflow:visible; }
 .btn-like:hover { border-color:var(--caramel); color:var(--caramel); background:#fdf3e4; transform:scale(1.08); }
@@ -204,8 +207,10 @@ main { padding-bottom:6rem; }
 @keyframes fall { 0%{opacity:1;transform:translateY(0) rotate(0)} 100%{opacity:0;transform:translateY(180px) rotate(540deg)} }
 
 /* ── FAB AJOUTER ── */
-.fab { position:fixed; bottom:1.5rem; right:1.5rem; z-index:90; background:var(--brown); color:var(--yellow); border:none; border-radius:999px; padding:0.75rem 1.4rem; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; box-shadow:0 4px 18px rgba(61,32,8,0.35); display:flex; align-items:center; gap:0.5rem; transition:all 0.15s; white-space:nowrap; letter-spacing:0.01em; }
-.fab:hover { background:#251608; transform:translateY(-2px); box-shadow:0 6px 24px rgba(61,32,8,0.45); }
+.fab { position:fixed; bottom:1.5rem; right:1.5rem; z-index:90; background:var(--brown); color:var(--yellow); border:none; border-radius:999px; padding:0.75rem 1.4rem; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(61,32,8,0.4); display:flex; align-items:center; gap:0.5rem; transition:all 0.18s; white-space:nowrap; letter-spacing:0.01em; }
+.fab::after { content:''; position:absolute; inset:-5px; border-radius:999px; border:2px solid var(--brown); opacity:0; animation:fabPulse 2.8s ease infinite; }
+@keyframes fabPulse { 0%,100%{opacity:0;transform:scale(1)} 50%{opacity:0.25;transform:scale(1.1)} }
+.fab:hover { background:var(--blue); transform:translateY(-3px) scale(1.03); box-shadow:0 8px 28px rgba(33,81,180,0.35); }
 .fab.hidden { display:none; }
 
 /* ── FORM DRAWER ── */
