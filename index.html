@@ -40,13 +40,13 @@ header { background-color:var(--yellow); background-image:radial-gradient(circle
 .stat-label { font-family:'DM Mono',monospace; font-size:0.48rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--brown); opacity:0.45; display:block; margin-top:0.15rem; }
 
 /* ── FLAN DE LA SEMAINE ── */
-.semaine-section { background:linear-gradient(135deg,#fffbe6,#fde8a0,#f8d055); border-bottom:2px solid rgba(210,160,20,0.35); border-top:1px solid rgba(210,160,20,0.2); padding:0.9rem 1.5rem; cursor:pointer; transition:all 0.15s; }
-.semaine-section:hover { background:linear-gradient(135deg,#fff8d0,#fddf80,#f5c830); }
-.semaine-inner { display:flex; align-items:center; gap:1rem; }
+.semaine-section { background:linear-gradient(to right,#fffbe6 0%,#fde8a0 60%,#f8d055 100%); border-bottom:2px solid rgba(210,160,20,0.35); border-top:1px solid rgba(210,160,20,0.2); padding:0.9rem 1.5rem; cursor:pointer; transition:all 0.15s; overflow:hidden; }
+.semaine-section:hover { background:linear-gradient(to right,#fff8d0 0%,#fddf80 60%,#f5c830 100%); }
+.semaine-inner { display:flex; align-items:center; gap:0.75rem; min-width:0; }
 .semaine-tag { font-family:'DM Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.12em; color:#7a5500; font-weight:700; flex-shrink:0; background:rgba(255,255,255,0.65); padding:2px 9px; border-radius:999px; border:1px solid rgba(210,160,20,0.4); }
-.semaine-name { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.semaine-sub { font-size:0.78rem; color:var(--muted); flex-shrink:0; }
-.semaine-likes { font-family:'Fraunces',serif; font-size:1.2rem; font-weight:900; color:var(--caramel); flex-shrink:0; }
+.semaine-name { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; color:var(--brown); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.semaine-sub { font-size:0.78rem; color:var(--brown); opacity:0.6; flex-shrink:0; white-space:nowrap; }
+.semaine-likes { font-family:'Fraunces',serif; font-size:1.2rem; font-weight:900; color:var(--brown); flex-shrink:0; }
 
 /* ── NAV ── */
 .nav-sticky { position:sticky; top:0; z-index:100; background:var(--surface); border-bottom:2px solid var(--border); box-shadow:0 2px 10px rgba(60,32,8,0.06); }
@@ -295,6 +295,7 @@ main { padding-bottom:6rem; }
   .popup-grid { grid-template-columns:1fr 1fr; }
   #map { height:calc(100vh - 160px); }
   .semaine-section { padding:0.75rem 1rem; }
+  .semaine-sub { display:none; }
   .list-header { padding:0.6rem 1rem; }
 }
 </style>
@@ -423,7 +424,7 @@ main { padding-bottom:6rem; }
     <div class="popup-actions">
       <button class="popup-close" onclick="document.getElementById('overlay').classList.remove('open')">Fermer</button>
       <button class="popup-like" id="popup-like-btn" onclick="likeFromPopup()">♥ Liker</button>
-      <button class="popup-share" id="popup-share-btn">↗</button>
+      <button class="popup-share" id="popup-share-btn">Partager ↗</button>
     </div>
   </div>
 </div>
@@ -808,8 +809,12 @@ function showRandom(){
 document.getElementById("popup-share-btn").addEventListener("click",()=>{
   if(!currentFlan)return;
   const f=currentFlan;
-  const txt=`${f.nom} — ${f.boulangerie} (${f.ville})\n${f.prix} · ${f.appareil} · ${f.pate}${f.date?" · "+f.date:""}\n${f.likes} likes sur MeilleurFlan.fr${f.comment?'\n"'+f.comment+'"':""}`;
-  navigator.clipboard.writeText(txt).then(()=>toast("Copié !")).catch(()=>toast("Impossible de copier."));
+  const txt=`${f.nom} chez ${f.boulangerie} à ${f.ville} — ${f.prix} · ${f.likes} ❤️\nDécouvre le meilleur flan de France sur MeilleurFlan.fr`;
+  if(navigator.share){
+    navigator.share({title:`${f.nom} — MeilleurFlan.fr`,text:txt,url:"https://meilleurflan.fr"}).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(txt+"\nhttps://meilleurflan.fr").then(()=>toast("Lien copié !")).catch(()=>toast("Impossible de partager."));
+  }
 });
 
 function closeOverlay(e){if(e.target.id==="overlay")document.getElementById("overlay").classList.remove("open");}
