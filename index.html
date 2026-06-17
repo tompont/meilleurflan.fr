@@ -466,16 +466,25 @@ const CITY_COORDS={
   "Marseille":[43.2965,5.3698],"Toulouse":[43.6047,1.4442],"Nantes":[47.2184,-1.5536],
   "Strasbourg":[48.5734,7.7521],"Lille":[50.6292,3.0573],"Nice":[43.7102,7.2620],
 };
+// Enrichit CITY_COORDS avec le cache localStorage des géocodages précédents
+const _geoCache=JSON.parse(localStorage.getItem('mf_geo')||'{}');
+Object.assign(CITY_COORDS,_geoCache);
 
-const SEED=[
-  {nom:"Flan parisien au beurre",boulangerie:"Maison Landemaine",ville:"Paris",prix:"3,50€",appareil:"Crémeux",pate:"Feuilletée et croustillante",comment:"Caramel légèrement amer, texture impeccable.",date:"mars 2025",likes:142,ts:NOW-60*DAY,reported:false,beenCount:14},
-  {nom:"Flan des Traboules",boulangerie:"Boulangerie du Soleil",ville:"Lyon",prix:"4€",appareil:"Coulant",pate:"Brisée et beurrée",comment:"Tremble à la moindre vibration.",date:"avril 2025",likes:89,ts:NOW-45*DAY,reported:false,beenCount:8},
-  {nom:"Flan aux noix de Grenoble",boulangerie:"Pâtisserie Belledonne",ville:"Grenoble",prix:"4,50€",appareil:"Classique",pate:"Feuilletée et croustillante",comment:"",date:"janvier 2025",likes:61,ts:NOW-90*DAY,reported:false,beenCount:5},
-  {nom:"Flan à la vanille de Bourbon",boulangerie:"Au Pain d'Antan",ville:"Bordeaux",prix:"3,50€",appareil:"Crémeux",pate:"Brisée et beurrée",comment:"Vanille de Madagascar, ça se sent.",date:"février 2025",likes:47,ts:NOW-50*DAY,reported:false,beenCount:3},
-  {nom:"Flan breton caramel beurre salé",boulangerie:"Ty Breizh",ville:"Rennes",prix:"4€",appareil:"Coulant",pate:"Feuilletée et croustillante",comment:"",date:"mai 2025",likes:38,ts:NOW-10*DAY,reported:false,beenCount:2},
-  {nom:"Flan provençal à la lavande",boulangerie:"Boulangerie Lou Pétrin",ville:"Sisteron",prix:"4,50€",appareil:"Classique",pate:"Brisée et beurrée",comment:"Discret sur la lavande, heureusement.",date:"juin 2025",likes:22,ts:NOW-5*DAY,reported:false,beenCount:1},
-  {nom:"Flan vanille industriel",boulangerie:"Supermarché du Centre",ville:"Paris",prix:"Moins de 3€",appareil:"Compact",pate:"Brisée et beurrée",comment:"",date:"mars 2025",likes:12,ts:NOW-3*DAY,reported:false,beenCount:0},
-];
+async function geocodeCity(ville){
+  if(CITY_COORDS[ville])return CITY_COORDS[ville];
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(ville+', France')}&format=json&limit=1`,{headers:{'Accept-Language':'fr'}});
+    const d=await r.json();
+    if(d&&d[0]){
+      const c=[parseFloat(d[0].lat),parseFloat(d[0].lon)];
+      CITY_COORDS[ville]=c;_geoCache[ville]=c;
+      localStorage.setItem('mf_geo',JSON.stringify(_geoCache));
+      return c;
+    }
+  }catch(e){}
+  return null;
+}
+
 
 let flans=[], cityFilter="all", appareilFilter="", pateFilter="";
 let currentFlan=null, mapVisible=false;
@@ -715,12 +724,14 @@ function toggleMap(){
   }
 }
 
-function renderMap(){
+async function renderMap(){
   if(!leafletMap)return;
   markers.forEach(m=>m.remove());markers=[];
   const list=sortedList(filtered());
   const byCity={};
   list.forEach(f=>{if(!byCity[f.ville])byCity[f.ville]=[];byCity[f.ville].push(f);});
+  // Géocode toutes les villes inconnues avant d'afficher
+  await Promise.all(Object.keys(byCity).map(v=>geocodeCity(v)));
   const allCoords=[];
   Object.entries(byCity).forEach(([ville,fl])=>{
     const coords=CITY_COORDS[ville];if(!coords)return;
@@ -864,12 +875,6 @@ function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").repl
 
 async function initFirestore(){
   document.getElementById("ranking").innerHTML=`<div class="empty">Chargement…</div>`;
-  const snap=await db.collection("flans").limit(1).get();
-  if(snap.empty){
-    const batch=db.batch();
-    SEED.forEach(flan=>batch.set(db.collection("flans").doc(),flan));
-    await batch.commit();
-  }
   db.collection("flans").onSnapshot(snapshot=>{
     const likedMap=JSON.parse(localStorage.getItem('mf_liked')||'{}');
     flans=snapshot.docs.map(doc=>({id:doc.id,...doc.data(),liked:!!likedMap[doc.id]}));
