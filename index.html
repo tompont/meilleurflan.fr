@@ -584,7 +584,7 @@ function sortedList(list){
 function filtered(){
   const q=document.getElementById("search").value.toLowerCase().trim();
   return flans
-    .filter(f=>!f.reported)
+    .filter(f=>!f.reported && f.approved!==false)
     .filter(f=>cityFilter==="all"||f.ville===cityFilter)
     .filter(f=>!appareilFilter||f.appareil===appareilFilter)
     .filter(f=>!pateFilter||f.pate===pateFilter)
@@ -881,6 +881,18 @@ function clearErrors(){
   document.getElementById("dup-error").classList.remove("show");
 }
 
+const PROFANITY=['merde','putain','connard','connasse','salope','fdp','tg','nique','enculé','encule','baise','bordel','pute','chiotte','couille','branleur','batard','bâtard'];
+function hasProfanity(s){const l=s.toLowerCase();return PROFANITY.some(w=>l.includes(w));}
+function isGibberish(s){
+  const l=s.toLowerCase().replace(/\s/g,'');
+  if(l.length<2)return false;
+  if(/[^aeiouéèêëàâùûüîïôœ]{7,}/.test(l))return true;
+  if(/(.)\1{4,}/.test(l))return true;
+  const letters=(l.match(/[a-zéèêëàâùûüîïôœ]/g)||[]).length;
+  return l.length>5&&letters/l.length<0.45;
+}
+function contentOk(s){return !hasProfanity(s)&&!isGibberish(s);}
+
 async function addFlan(){
   clearErrors();
   const nom=document.getElementById("inp-nom").value.trim();
@@ -901,13 +913,27 @@ async function addFlan(){
   if(!pateEl){document.getElementById("err-pate").classList.add("show");ok=false;}
   if(!ok)return;
   if(flans.some(f=>normalize(f.nom)===normalize(nom)&&normalize(f.boulangerie)===normalize(boulangerie))){document.getElementById("dup-error").classList.add("show");return;}
+  // Contenu inapproprié ou charabia
+  if(!contentOk(nom)||!contentOk(boulangerie)||!contentOk(ville)||(comment&&!contentOk(comment))){
+    toast("Contenu invalide ou inapproprié, merci de corriger.");return;
+  }
+  // Vérification que la ville existe vraiment
+  toast("Vérification de la ville…");
+  const coords=await geocodeCity(ville);
+  if(!coords){
+    const errV=document.getElementById("err-ville");
+    errV.textContent="Ville introuvable en France — vérifie l'orthographe.";
+    errV.classList.add("show");
+    document.getElementById("inp-ville").classList.add("error");
+    return;
+  }
   try{
-    await db.collection("flans").add({nom,boulangerie,ville,prix,comment,date,appareil:appareilEl.value,pate:pateEl.value,likes:0,ts:Date.now(),reported:false,beenCount:0});
+    await db.collection("flans").add({nom,boulangerie,ville,prix,comment,date,appareil:appareilEl.value,pate:pateEl.value,likes:0,ts:Date.now(),reported:false,beenCount:0,approved:false});
     ["inp-nom","inp-boulangerie","inp-ville","inp-comment","inp-date"].forEach(id=>document.getElementById(id).value="");
     document.getElementById("inp-prix").value="";
     document.querySelectorAll('input[name="appareil"],input[name="pate"]').forEach(r=>r.checked=false);
     closeForm();
-    toast("Flan ajouté ! 🍮");showAll=false;window.scrollTo({top:0,behavior:"smooth"});
+    toast("Flan soumis ! Il sera vérifié avant d'apparaître 🍮");showAll=false;window.scrollTo({top:0,behavior:"smooth"});
   }catch(e){toast("Erreur lors de l'ajout, réessaie.");}
 }
 

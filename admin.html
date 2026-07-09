@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — MeilleurFlan.fr</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fffdf8;--surface:#fff;--caramel:#c07830;--brown:#3d2008;--border:#e8dbc8;--muted:#9a8878;--yellow:#f5d84a;--text:#2a1505;--green:#1a7a3a;--red:#b03010}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.login-box{background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:360px;text-align:center}
+.login-logo{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:900;color:var(--brown);margin-bottom:0.25rem}
+.login-logo em{font-style:italic;color:var(--caramel)}
+.login-sub{font-size:0.82rem;color:var(--muted);margin-bottom:1.75rem}
+.login-box input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:0.7rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.95rem;outline:none;margin-bottom:0.75rem;transition:border-color 0.15s}
+.login-box input:focus{border-color:var(--caramel)}
+.login-btn{width:100%;background:var(--brown);color:#fff;border:none;border-radius:10px;padding:0.75rem;font-family:'DM Sans',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;transition:background 0.15s}
+.login-btn:hover{background:var(--caramel)}
+.login-error{color:var(--red);font-size:0.82rem;margin-top:0.5rem;display:none}
+
+/* APP */
+.app{display:none}
+.app-header{background:var(--yellow);padding:1rem 1.5rem;border-bottom:2px solid rgba(61,32,8,0.15);display:flex;align-items:center;justify-content:space-between}
+.app-logo{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:900;color:var(--brown)}
+.app-logo em{font-style:italic;color:var(--caramel)}
+.app-logo span{font-family:'DM Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;opacity:0.5;margin-left:0.5rem;vertical-align:middle}
+.logout-btn{font-size:0.82rem;font-weight:600;color:var(--muted);background:none;border:1.5px solid var(--border);border-radius:999px;padding:0.3rem 0.9rem;cursor:pointer;transition:all 0.12s}
+.logout-btn:hover{color:var(--red);border-color:var(--red)}
+
+.tabs{display:flex;border-bottom:2px solid var(--border);background:var(--surface)}
+.tab{font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;background:none;border:none;border-bottom:3px solid transparent;padding:0.85rem 1.5rem;cursor:pointer;color:var(--muted);transition:all 0.12s;margin-bottom:-2px}
+.tab.active{color:var(--caramel);border-bottom-color:var(--caramel)}
+.tab-badge{background:var(--caramel);color:#fff;border-radius:999px;font-size:0.6rem;padding:1px 6px;font-weight:700;margin-left:0.35rem}
+
+.section{padding:1.5rem;max-width:900px;margin:0 auto;display:none}
+.section.active{display:block}
+
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted);font-style:italic}
+
+.flan-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:0.85rem;display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:start}
+.flan-card.flagged{border-color:#f5c8b8;background:#fff8f5}
+.flan-name{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;color:var(--brown);margin-bottom:0.15rem}
+.flan-where{font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem}
+.flan-where strong{color:var(--text);font-weight:600}
+.flan-meta{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.5rem}
+.tag{font-family:'DM Mono',monospace;font-size:0.58rem;text-transform:uppercase;letter-spacing:0.08em;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--muted)}
+.flan-comment{font-size:0.82rem;font-style:italic;color:var(--text);opacity:0.6;border-left:2px solid var(--caramel);padding-left:0.6rem;margin-top:0.4rem}
+.flan-actions{display:flex;flex-direction:column;gap:0.4rem;flex-shrink:0}
+.btn-approve{background:var(--green);color:#fff;border:none;border-radius:8px;padding:0.5rem 1.1rem;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity 0.12s}
+.btn-approve:hover{opacity:0.85}
+.btn-reject{background:#fff;color:var(--red);border:1.5px solid #f5c0b0;border-radius:8px;padding:0.5rem 1.1rem;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.12s}
+.btn-reject:hover{background:#fff0ec;border-color:var(--red)}
+.btn-restore{background:#fff;color:var(--green);border:1.5px solid #b8dfc8;border-radius:8px;padding:0.5rem 1.1rem;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
+
+.stats-row{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.stat-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:1rem 1.5rem;flex:1;min-width:120px;text-align:center}
+.stat-box .n{font-family:'Fraunces',serif;font-size:2rem;font-weight:900;color:var(--brown);line-height:1}
+.stat-box .l{font-family:'DM Mono',monospace;font-size:0.52rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-top:0.2rem}
+
+.loading{text-align:center;padding:3rem;color:var(--muted)}
+
+@media(max-width:520px){
+  .flan-card{grid-template-columns:1fr}
+  .flan-actions{flex-direction:row}
+  .stats-row{gap:0.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">Meilleur<em>Flan</em>.fr <span>Admin</span></div>
+    <div class="login-sub">Espace de modération</div>
+    <input type="password" id="pwd-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">Accéder</button>
+    <div class="login-error" id="login-error">Mot de passe incorrect.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="app-header">
+    <div class="app-logo">Meilleur<em>Flan</em>.fr <span>Admin</span></div>
+    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-pending" onclick="showTab('pending')">
+      En attente <span class="tab-badge" id="badge-pending">0</span>
+    </button>
+    <button class="tab" id="tab-reported" onclick="showTab('reported')">
+      Signalés <span class="tab-badge" id="badge-reported">0</span>
+    </button>
+    <button class="tab" id="tab-all" onclick="showTab('all')">Tous les flans</button>
+  </div>
+
+  <div class="section active" id="section-pending">
+    <div id="stats-row" class="stats-row"></div>
+    <div id="list-pending"><div class="loading">Chargement…</div></div>
+  </div>
+  <div class="section" id="section-reported">
+    <div id="list-reported"><div class="loading">Chargement…</div></div>
+  </div>
+  <div class="section" id="section-all">
+    <div id="list-all"><div class="loading">Chargement…</div></div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// ── MOT DE PASSE ADMIN (à changer) ──
+const ADMIN_PASSWORD = 'flan2026';
+
+firebase.initializeApp({
+  apiKey:"AIzaSyC8ggwK5WfFGmpjzaHuxc-tkwRnKUm-C94",
+  authDomain:"meilleurflan.firebaseapp.com",
+  projectId:"meilleurflan",
+  storageBucket:"meilleurflan.appspot.com",
+  messagingSenderId:"220754445019",
+  appId:"1:220754445019:web:4ea8c2a6d7e4a0c6e77912"
+});
+const db = firebase.firestore();
+
+let allFlans = [];
+let unsubscribe = null;
+
+function login(){
+  const pwd = document.getElementById('pwd-input').value;
+  if(pwd === ADMIN_PASSWORD){
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('app').style.display='block';
+    sessionStorage.setItem('mf_admin','1');
+    startListening();
+  } else {
+    document.getElementById('login-error').style.display='block';
+    document.getElementById('pwd-input').value='';
+    document.getElementById('pwd-input').focus();
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem('mf_admin');
+  if(unsubscribe) unsubscribe();
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('pwd-input').value='';
+}
+
+// Auto-login si déjà connecté dans la session
+if(sessionStorage.getItem('mf_admin')==='1'){
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  startListening();
+}
+
+function startListening(){
+  unsubscribe = db.collection('flans').orderBy('ts','desc').onSnapshot(snap=>{
+    allFlans = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAll();
+  });
+}
+
+function renderAll(){
+  const pending = allFlans.filter(f=>f.approved===false&&!f.reported);
+  const reported = allFlans.filter(f=>f.reported);
+  const approved = allFlans.filter(f=>f.approved===true||f.approved===undefined);
+
+  document.getElementById('badge-pending').textContent = pending.length;
+  document.getElementById('badge-reported').textContent = reported.length;
+
+  // Stats
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-box"><div class="n">${pending.length}</div><div class="l">En attente</div></div>
+    <div class="stat-box"><div class="n">${approved.length}</div><div class="l">Validés</div></div>
+    <div class="stat-box"><div class="n">${reported.length}</div><div class="l">Signalés</div></div>
+    <div class="stat-box"><div class="n">${allFlans.reduce((s,f)=>s+f.likes,0)}</div><div class="l">Total likes</div></div>
+  `;
+
+  renderList('list-pending', pending, 'pending');
+  renderList('list-reported', reported, 'reported');
+  renderList('list-all', allFlans, 'all');
+}
+
+function renderList(containerId, list, mode){
+  const el = document.getElementById(containerId);
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state">${mode==='pending'?'Aucun flan en attente 🎉':mode==='reported'?'Aucun signalement 🎉':'Aucun flan.'}</div>`;
+    return;
+  }
+  el.innerHTML = list.map(f=>`
+    <div class="flan-card ${f.reported?'flagged':''}">
+      <div>
+        <div class="flan-name">${esc(f.nom)}</div>
+        <div class="flan-where"><strong>${esc(f.boulangerie)}</strong> · ${esc(f.ville)}</div>
+        <div class="flan-meta">
+          <span class="tag">${esc(f.prix)}</span>
+          <span class="tag">${esc(f.appareil)}</span>
+          <span class="tag">${esc(f.pate)}</span>
+          <span class="tag">${esc(f.date||'—')}</span>
+          <span class="tag">${f.likes} ♥</span>
+          ${f.approved===false?'<span class="tag" style="color:#b03010;border-color:#f5c0b0">⏳ En attente</span>':''}
+          ${f.reported?'<span class="tag" style="color:#b03010;border-color:#f5c0b0">🚩 Signalé</span>':''}
+        </div>
+        ${f.comment?`<div class="flan-comment">"${esc(f.comment)}"</div>`:''}
+      </div>
+      <div class="flan-actions">
+        ${f.approved===false||f.reported?`<button class="btn-approve" onclick="approve('${f.id}')">✓ Valider</button>`:''}
+        ${!f.reported?`<button class="btn-reject" onclick="reject('${f.id}')">✕ Supprimer</button>`:`<button class="btn-reject" onclick="reject('${f.id}')">✕ Supprimer</button><button class="btn-restore" onclick="restore('${f.id}')">↩ Restaurer</button>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function approve(id){
+  await db.collection('flans').doc(id).update({approved:true,reported:false});
+}
+async function reject(id){
+  if(confirm('Supprimer définitivement ce flan ?')){
+    await db.collection('flans').doc(id).delete();
+  }
+}
+async function restore(id){
+  await db.collection('flans').doc(id).update({reported:false,approved:true});
+}
+
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('section-'+name).classList.add('active');
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+</script>
+</body>
+</html>
