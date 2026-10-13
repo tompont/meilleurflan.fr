@@ -64,6 +64,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .stat-box .n{font-family:'Fraunces',serif;font-size:2rem;font-weight:900;color:var(--brown);line-height:1}
 .stat-box .l{font-family:'DM Mono',monospace;font-size:0.52rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-top:0.2rem}
 
+.photo-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:1rem;margin-bottom:0.85rem;display:grid;grid-template-columns:160px 1fr auto;gap:1rem;align-items:center}
+.photo-card img{width:160px;height:120px;object-fit:cover;border-radius:10px;background:var(--bg)}
+.addr{font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem}
+.addr.missing{color:var(--red);font-weight:600}
+.addr-box{margin-top:0.6rem;display:none}
+.addr-box.open{display:block}
+.addr-box input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:0.55rem 0.8rem;font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none}
+.addr-box input:focus{border-color:var(--caramel)}
+.addr-res button{display:block;width:100%;text-align:left;background:#fff;border:none;border-bottom:1px solid var(--border);padding:0.55rem 0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem}
+.addr-res button:hover{background:#fff6e6}
+.btn-addr{background:#fff;color:var(--caramel);border:1.5px solid #f0d4b0;border-radius:8px;padding:0.5rem 1.1rem;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
+@media(max-width:520px){.photo-card{grid-template-columns:1fr}.photo-card img{width:100%;height:180px}}
 .loading{text-align:center;padding:3rem;color:var(--muted)}
 
 @media(max-width:520px){
@@ -100,7 +112,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
     <button class="tab" id="tab-reported" onclick="showTab('reported')">
       Signalés <span class="tab-badge" id="badge-reported">0</span>
     </button>
-    <button class="tab" id="tab-all" onclick="showTab('all')">Tous les flans</button>
+    <button class="tab" id="tab-photos" onclick="showTab('photos')">
+      Photos <span class="tab-badge" id="badge-photos">0</span>
+    </button>
+    <button class="tab" id="tab-all" onclick="showTab('all')">Tous les flans <span class="tab-badge" id="badge-noaddr" title="Sans adresse">0</span></button>
   </div>
 
   <div class="section active" id="section-pending">
@@ -109,6 +124,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
   </div>
   <div class="section" id="section-reported">
     <div id="list-reported"><div class="loading">Chargement…</div></div>
+  </div>
+  <div class="section" id="section-photos">
+    <div id="list-photos"><div class="loading">Chargement…</div></div>
   </div>
   <div class="section" id="section-all">
     <div id="list-all"><div class="loading">Chargement…</div></div>
@@ -126,13 +144,14 @@ firebase.initializeApp({
   apiKey:"AIzaSyC8ggwK5WfFGmpjzaHuxc-tkwRnKUm-C94",
   authDomain:"meilleurflan.firebaseapp.com",
   projectId:"meilleurflan",
-  storageBucket:"meilleurflan.appspot.com",
-  messagingSenderId:"220754445019",
-  appId:"1:220754445019:web:4ea8c2a6d7e4a0c6e77912"
+  storageBucket:"meilleurflan.firebasestorage.app",
+  messagingSenderId:"1004619012500",
+  appId:"1:1004619012500:web:d98b09d4d4fe5ca86a1781"
 });
 const db = firebase.firestore();
 
 let allFlans = [];
+let allPhotos = [];
 let unsubscribe = null;
 
 function login(){
@@ -169,6 +188,10 @@ function startListening(){
     allFlans = snap.docs.map(d=>({id:d.id,...d.data()}));
     renderAll();
   });
+  db.collection('photos').where('approved','==',false).onSnapshot(snap=>{
+    allPhotos = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.ts-a.ts);
+    renderPhotos();
+  }, ()=>{ document.getElementById('list-photos').innerHTML='<div class="empty-state">Lecture des photos impossible : vérifie les règles Firestore de la collection « photos ».</div>'; });
 }
 
 function renderAll(){
@@ -190,6 +213,75 @@ function renderAll(){
   renderList('list-pending', pending, 'pending');
   renderList('list-reported', reported, 'reported');
   renderList('list-all', allFlans, 'all');
+  document.getElementById('badge-noaddr').textContent = allFlans.filter(f=>typeof f.lat!=='number').length;
+  renderPhotos();
+}
+
+function renderPhotos(){
+  document.getElementById('badge-photos').textContent = allPhotos.length;
+  const el = document.getElementById('list-photos');
+  if(!allPhotos.length){ el.innerHTML='<div class="empty-state">Aucune photo en attente 🎉</div>'; return; }
+  el.innerHTML = allPhotos.map(p=>{
+    const f = allFlans.find(x=>x.id===p.flanId) || {};
+    const thumb = String(p.url||'').replace('/upload/','/upload/c_fill,w_320,h_240,q_auto,f_auto/');
+    return `<div class="photo-card">
+      <a href="${esc(p.url)}" target="_blank" rel="noopener"><img src="${esc(thumb)}" alt=""></a>
+      <div>
+        <div class="flan-name">${esc(f.boulangerie||'Flan supprimé')}</div>
+        <div class="flan-where">${esc(f.nom||'')} · ${esc(f.ville||'')}</div>
+        ${f.photo?'<div class="addr">Ce flan a déjà une photo principale</div>':''}
+      </div>
+      <div class="flan-actions">
+        <button class="btn-approve" onclick="approvePhoto('${p.id}',true)">✓ Valider${f.photo?' et mettre en principale':''}</button>
+        ${f.photo?`<button class="btn-restore" onclick="approvePhoto('${p.id}',false)">✓ Valider sans changer</button>`:''}
+        <button class="btn-reject" onclick="rejectPhoto('${p.id}')">✕ Refuser</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function approvePhoto(id, makeMain){
+  const p = allPhotos.find(x=>x.id===id); if(!p) return;
+  await db.collection('photos').doc(id).update({approved:true});
+  const f = allFlans.find(x=>x.id===p.flanId);
+  if(f && (makeMain || !f.photo)) await db.collection('flans').doc(f.id).update({photo:p.url});
+}
+async function rejectPhoto(id){
+  if(confirm('Refuser cette photo ?')) await db.collection('photos').doc(id).delete();
+}
+
+/* Adresse des anciens flans */
+function quartierFrom(city, postcode){
+  const pc=String(postcode||''), big={Paris:'75',Lyon:'69',Marseille:'13'};
+  if(big[city]&&pc.startsWith(big[city])&&pc.length===5){const n=parseInt(pc.slice(3),10);if(n>=1&&n<=20)return `${city} ${n===1?'1er':n+'e'}`;}
+  return '';
+}
+function toggleAddr(id){
+  const box=document.getElementById('addr-'+id); box.classList.toggle('open');
+  const f=allFlans.find(x=>x.id===id); const inp=box.querySelector('input');
+  if(!inp.value) inp.value=`${f.boulangerie} ${f.ville}`;
+  inp.focus(); searchAddr(id);
+}
+let addrTimer, addrResults={};
+function searchAddr(id){
+  clearTimeout(addrTimer);
+  addrTimer=setTimeout(async()=>{
+    const box=document.getElementById('addr-'+id); const q=box.querySelector('input').value.trim();
+    const res=box.querySelector('.addr-res'); if(q.length<3){res.innerHTML='';return;}
+    try{
+      const r=await fetch('https://photon.komoot.io/api/?'+new URLSearchParams({q,lang:'fr',limit:'8'}));
+      const d=await r.json();
+      addrResults[id]=(d.features||[]).filter(ft=>ft.properties.countrycode==='FR').map(ft=>{
+        const p=ft.properties, ville=p.city||p.town||p.village||p.county||'', street=[p.housenumber,p.street].filter(Boolean).join(' ');
+        return {name:p.name||street, adresse:[street,ville].filter(Boolean).join(', '), ville, quartier:quartierFrom(ville,p.postcode), lat:ft.geometry.coordinates[1], lng:ft.geometry.coordinates[0], osmId:p.osm_type&&p.osm_id?p.osm_type+p.osm_id:''};
+      });
+      res.innerHTML=addrResults[id].map((a,i)=>`<button type="button" onclick="setAddr('${id}',${i})"><strong>${esc(a.name)}</strong> — ${esc(a.adresse)}</button>`).join('')||'<div class="addr">Rien trouvé, essaie avec la rue.</div>';
+    }catch(e){res.innerHTML='<div class="addr">Recherche indisponible.</div>';}
+  },300);
+}
+async function setAddr(id,i){
+  const a=addrResults[id][i]; const upd={adresse:a.adresse,lat:a.lat,lng:a.lng};
+  if(a.quartier) upd.quartier=a.quartier; if(a.osmId) upd.osmId=a.osmId;
+  await db.collection('flans').doc(id).update(upd);
 }
 
 function renderList(containerId, list, mode){
@@ -203,6 +295,7 @@ function renderList(containerId, list, mode){
       <div>
         <div class="flan-name">${esc(f.nom)}</div>
         <div class="flan-where"><strong>${esc(f.boulangerie)}</strong> · ${esc(f.ville)}</div>
+        <div class="addr ${typeof f.lat==='number'?'':'missing'}">${typeof f.lat==='number'?'📍 '+esc(f.adresse||'Position enregistrée'):'Adresse manquante : le flan est placé au centre de la ville'}</div>
         <div class="flan-meta">
           <span class="tag">${esc(f.prix)}</span>
           <span class="tag">${esc(f.appareil)}</span>
@@ -213,8 +306,10 @@ function renderList(containerId, list, mode){
           ${f.reported?'<span class="tag" style="color:#b03010;border-color:#f5c0b0">🚩 Signalé</span>':''}
         </div>
         ${f.comment?`<div class="flan-comment">"${esc(f.comment)}"</div>`:''}
+        <div class="addr-box" id="addr-${f.id}"><input placeholder="Nom de la boulangerie et ville" oninput="searchAddr('${f.id}')"><div class="addr-res"></div></div>
       </div>
       <div class="flan-actions">
+        <button class="btn-addr" onclick="toggleAddr('${f.id}')">${typeof f.lat==='number'?'Corriger l\'adresse':'+ Adresse'}</button>
         ${f.approved===false||f.reported?`<button class="btn-approve" onclick="approve('${f.id}')">✓ Valider</button>`:''}
         ${!f.reported?`<button class="btn-reject" onclick="reject('${f.id}')">✕ Supprimer</button>`:`<button class="btn-reject" onclick="reject('${f.id}')">✕ Supprimer</button><button class="btn-restore" onclick="restore('${f.id}')">↩ Restaurer</button>`}
       </div>
